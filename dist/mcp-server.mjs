@@ -30643,7 +30643,7 @@ function statusText(task) {
   return pieces.join(" ");
 }
 function createMcpServer({ service = createTaskService() } = {}) {
-  const server = new McpServer({ name: "Kimi Partner", version: "0.1.0" });
+  const server = new McpServer({ name: "Kimi Partner", version: "0.1.1" });
   server.registerTool("start_kimi_task", {
     title: "Start an approved Kimi coding task",
     description: "Start Kimi Code only after the user explicitly asks for Kimi or approves it for this task. Requires a local Git worktree and scoped allowed paths; Codex must wait, inspect the diff, and independently verify the result.",

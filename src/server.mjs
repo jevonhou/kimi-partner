@@ -68,7 +68,7 @@ function statusText(task) {
 }
 
 export function createMcpServer({ service = createTaskService() } = {}) {
-  const server = new McpServer({ name: "Kimi Partner", version: "0.1.0" });
+  const server = new McpServer({ name: "Kimi Partner", version: "0.1.1" });
 
   server.registerTool("start_kimi_task", {
     title: "Start an approved Kimi coding task",
