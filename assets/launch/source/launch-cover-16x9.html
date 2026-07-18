@@ -7,115 +7,171 @@
   <style>
     * { box-sizing: border-box; }
     html, body { width: 1280px; height: 720px; margin: 0; overflow: hidden; }
-    body { color: #171A22; font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+    body { color: #16181F; font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
     .canvas {
       width: 1280px;
       height: 720px;
-      padding: 52px 72px 46px;
       position: relative;
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      grid-template-rows: auto 1fr auto;
-      column-gap: 24px;
-      background: #F5F7FC;
+      overflow: hidden;
+      background: #F3F5FA;
     }
-    .canvas::before {
+    .rail {
       position: absolute;
       top: 0;
       right: 0;
-      width: 34%;
-      height: 100%;
-      content: "";
-      background: #FFFFFF;
+      bottom: 0;
+      width: 456px;
+      overflow: hidden;
+      background: #16181F;
     }
-    .brand, .message, .roles, footer { position: relative; z-index: 1; }
+    .rail .motif {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 456px;
+      height: 720px;
+    }
+    .rail .tile {
+      position: absolute;
+      top: 232px;
+      left: 104px;
+      width: 248px;
+      height: 248px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #FFFFFF;
+      border-radius: 30px;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.38);
+    }
+    .rail .tile img { width: 186px; height: 186px; object-fit: contain; }
+    .left {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 456px;
+      padding: 52px 56px 46px 64px;
+      display: flex;
+      flex-direction: column;
+    }
     .brand {
-      grid-column: 1 / 5;
       display: flex;
       align-items: center;
       gap: 12px;
-      color: #171A22;
+      color: #16181F;
       font-size: 14px;
       font-weight: 700;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.18em;
     }
     .brand img { width: 30px; height: 30px; object-fit: contain; }
-    .message {
-      grid-column: 1 / 9;
-      align-self: center;
-      margin-top: 23px;
-    }
+    .message { margin: auto 0; }
     .eyebrow {
-      margin: 0 0 20px;
+      margin: 0 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
       color: #2563EB;
       font-size: 13px;
       font-weight: 800;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.16em;
+    }
+    .eyebrow::before {
+      width: 34px;
+      height: 3px;
+      content: "";
+      background: #2563EB;
     }
     h1 {
-      max-width: 760px;
       margin: 0;
-      color: #171A22;
+      color: #16181F;
       font-size: 64px;
       font-weight: 800;
-      letter-spacing: -0.06em;
-      line-height: 1.08;
+      letter-spacing: -0.02em;
+      line-height: 1.16;
     }
     h1 em { display: block; color: #7C4DFF; font-style: normal; }
     .support {
       max-width: 520px;
       margin: 26px 0 0;
-      color: #5E6678;
+      color: #5C6373;
       font-size: 18px;
       font-weight: 500;
       letter-spacing: 0.01em;
-      line-height: 1.65;
+      line-height: 1.7;
     }
     .roles {
-      grid-column: 1 / 13;
+      margin-bottom: 34px;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      align-self: end;
+      gap: 34px;
     }
     .roles article {
-      min-height: 92px;
-      padding: 20px 22px;
+      padding-top: 14px;
       display: grid;
-      align-content: center;
-      gap: 7px;
-      background: #FFFFFF;
-      border-top: 3px solid #2563EB;
+      align-content: start;
+      gap: 6px;
+      border-top: 2px solid #2563EB;
     }
     .roles article:nth-child(2) { border-color: #7C4DFF; }
-    .roles article:nth-child(3) { border-color: #171A22; }
-    .roles b { color: #171A22; font-size: 20px; line-height: 1.2; }
-    .roles span { color: #5E6678; font-size: 13px; line-height: 1.35; }
+    .roles article:nth-child(2) i { color: #7C4DFF; }
+    .roles article:nth-child(3) { border-color: #16181F; }
+    .roles article:nth-child(3) i { color: #16181F; }
+    .roles i {
+      color: #2563EB;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+    }
+    .roles b { color: #16181F; font-size: 20px; font-weight: 800; line-height: 1.2; }
+    .roles span { color: #5C6373; font-size: 13px; line-height: 1.4; }
     footer {
-      grid-column: 7 / 13;
-      align-self: end;
-      color: #5E6678;
+      padding-top: 20px;
+      display: grid;
+      gap: 8px;
+      border-top: 2px solid #16181F;
+    }
+    .url-label {
+      color: #8A90A0;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+    }
+    .url {
+      color: #16181F;
       font-size: 30px;
       font-weight: 800;
       letter-spacing: 0;
-      text-align: right;
     }
   </style>
 </head>
 <body>
   <main class="canvas">
-    <header class="brand"><img src="../../logo/kimi-partner-logo.png" alt=""><span>KIMI PARTNER</span></header>
-    <section class="message">
-      <p class="eyebrow">DESIGNER-LED WORKFLOW</p>
-      <h1>设计师定方向，<em>模型加速落地。</em></h1>
-      <p class="support">让 Kimi 发挥前端表现力，让 Codex 守住工程质量。</p>
-    </section>
-    <section class="roles">
-      <article><b>设计师</b><span>目标 · 规范 · 判断</span></article>
-      <article><b>Kimi</b><span>前端实现 · 视觉完成度</span></article>
-      <article><b>Codex</b><span>范围控制 · 审查验收</span></article>
-    </section>
-    <footer>github.com/jevonhou/kimi-partner</footer>
+    <div class="left">
+      <header class="brand"><img src="../../logo/kimi-partner-logo.png" alt=""><span>KIMI PARTNER</span></header>
+      <section class="message">
+        <p class="eyebrow">DESIGNER-LED WORKFLOW</p>
+        <h1>设计师定方向，<em>模型加速落地。</em></h1>
+        <p class="support">让 Kimi 发挥前端表现力，让 Codex 守住工程质量。</p>
+      </section>
+      <section class="roles">
+        <article><i>01</i><b>设计师</b><span>目标 · 规范 · 判断</span></article>
+        <article><i>02</i><b>Kimi</b><span>前端实现 · 视觉完成度</span></article>
+        <article><i>03</i><b>Codex</b><span>范围控制 · 审查验收</span></article>
+      </section>
+      <footer>
+        <span class="url-label">GITHUB</span>
+        <span class="url">github.com/jevonhou/kimi-partner</span>
+      </footer>
+    </div>
+    <aside class="rail">
+      <svg class="motif" viewBox="0 0 456 720" fill="none" aria-hidden="true">
+        <path d="M108 238 L18 360 L108 482" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M348 238 L438 360 L348 482" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="tile"><img src="../../logo/kimi-partner-logo.png" alt=""></span>
+    </aside>
   </main>
 </body>
 </html>
