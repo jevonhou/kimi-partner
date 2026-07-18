@@ -201,11 +201,48 @@ function parseToolArguments(toolCall) {
   }
 }
 
+function isJavaScriptRegexLiteral(candidate) {
+  if (!candidate.startsWith("/") || candidate.startsWith("//")) return false;
+
+  let escaped = false;
+  let inCharacterClass = false;
+  let hasRegexSyntax = false;
+  for (let index = 1; index < candidate.length; index += 1) {
+    const character = candidate[index];
+    if (escaped) {
+      escaped = false;
+      hasRegexSyntax = true;
+      continue;
+    }
+    if (character === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (character === "[") {
+      inCharacterClass = true;
+      hasRegexSyntax = true;
+      continue;
+    }
+    if (character === "]" && inCharacterClass) {
+      inCharacterClass = false;
+      continue;
+    }
+    if (!inCharacterClass && character === "/") {
+      const suffix = candidate.slice(index + 1);
+      return hasRegexSyntax && /^(?:[dgimsuvy]*)(?:$|[),.;]|\.(?:exec|match|replace|search|split|test)\b)/.test(suffix);
+    }
+    if (!inCharacterClass && /[?*+(){}|^$]/.test(character)) hasRegexSyntax = true;
+  }
+  return false;
+}
+
 function shellAbsolutePaths(command) {
   const found = [];
   const pattern = /(?:^|[\s=])(?:"(\/[^"\n]+)"|'(\/[^'\n]+)'|(\/[^\s"';&|<>]+))/g;
   for (const match of command.matchAll(pattern)) {
-    found.push(match[1] ?? match[2] ?? match[3]);
+    const candidate = match[1] ?? match[2] ?? match[3];
+    if (candidate === "//" || isJavaScriptRegexLiteral(candidate)) continue;
+    found.push(candidate);
   }
   return found;
 }

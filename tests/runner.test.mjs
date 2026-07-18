@@ -181,19 +181,64 @@ test("runner blocks a reported write outside the allowed paths before it execute
 test("runner blocks a shell command that targets a path outside the Git root", async () => {
   await chmod(fakeKimi, 0o755);
   const projectPath = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-policy-"));
-  const taskDirectory = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-policy-state-"));
-  const forbidden = path.join(tmpdir(), `kimi-partner-forbidden-${Date.now()}.txt`);
+  const forbiddenTargets = [
+    path.join(tmpdir(), `kimi-partner-forbidden-${Date.now()}.txt`),
+    "/Users/example/outside-project",
+    "/Applications/Kimi Partner.app",
+    "//server/share",
+  ];
+
+  for (const [index, forbidden] of forbiddenTargets.entries()) {
+    const taskDirectory = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-policy-state-"));
+    const event = {
+      role: "assistant",
+      tool_calls: [{ function: { name: "Bash", arguments: JSON.stringify({ command: `ls '${forbidden}'` }) } }],
+    };
+
+    const result = await runKimiAttempt({
+      taskId: `task-shell-policy-${index}`,
+      attempt: 1,
+      executable: fakeKimi,
+      projectPath,
+      prompt: "read outside files",
+      modelAlias: "kimi-code/k3",
+      maxRuntimeMs: 2000,
+      policy: { gitRoot: projectPath, allowedPaths: ["src"] },
+      taskDirectory,
+      env: {
+        ...process.env,
+        FAKE_KIMI_TOOL_CALL: JSON.stringify(event),
+        FAKE_KIMI_DELAY_MS: "1000",
+      },
+    });
+
+    assert.equal(result.success, false, forbidden);
+    assert.equal(result.policyViolation?.code, "SHELL_PATH_OUTSIDE_GIT_ROOT", forbidden);
+    assert.equal(result.policyViolation?.target, forbidden);
+  }
+});
+
+test("runner allows project-local node validation scripts with JavaScript comments and regex literals", async () => {
+  await chmod(fakeKimi, 0o755);
+  const projectPath = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-validation-"));
+  const taskDirectory = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-validation-state-"));
+  const command = String.raw`node -e '
+const html = "<main></main>";
+// Check project-local markup without reading outside the Git root.
+const emoji = /[←-⇿⬀-⯿\u{1F000}-\u{1FAFF}]/u;
+console.log(/https?:\/\//.test(html), emoji.test(html));
+'`;
   const event = {
     role: "assistant",
-    tool_calls: [{ function: { name: "Bash", arguments: JSON.stringify({ command: `mkdir -p ${path.dirname(forbidden)}` }) } }],
+    tool_calls: [{ function: { name: "Bash", arguments: JSON.stringify({ command }) } }],
   };
 
   const result = await runKimiAttempt({
-    taskId: "task-shell-policy",
+    taskId: "task-shell-validation",
     attempt: 1,
     executable: fakeKimi,
     projectPath,
-    prompt: "write temp files",
+    prompt: "validate project files",
     modelAlias: "kimi-code/k3",
     maxRuntimeMs: 2000,
     policy: { gitRoot: projectPath, allowedPaths: ["src"] },
@@ -201,14 +246,11 @@ test("runner blocks a shell command that targets a path outside the Git root", a
     env: {
       ...process.env,
       FAKE_KIMI_TOOL_CALL: JSON.stringify(event),
-      FAKE_KIMI_DELAY_MS: "1000",
-      FAKE_KIMI_EDIT_FILE: forbidden,
     },
   });
 
-  assert.equal(result.success, false);
-  assert.equal(result.policyViolation?.code, "SHELL_PATH_OUTSIDE_GIT_ROOT");
-  await assert.rejects(readFile(forbidden, "utf8"), /ENOENT/);
+  assert.equal(result.success, true);
+  assert.equal(result.policyViolation, null);
 });
 
 test("runner blocks dependency installation even when the command has leading whitespace", async () => {
