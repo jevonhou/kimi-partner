@@ -201,48 +201,202 @@ function parseToolArguments(toolCall) {
   }
 }
 
-function isJavaScriptRegexLiteral(candidate) {
-  if (!candidate.startsWith("/") || candidate.startsWith("//")) return false;
-
-  let escaped = false;
-  let inCharacterClass = false;
-  let hasRegexSyntax = false;
-  for (let index = 1; index < candidate.length; index += 1) {
-    const character = candidate[index];
-    if (escaped) {
-      escaped = false;
-      hasRegexSyntax = true;
-      continue;
-    }
-    if (character === "\\") {
-      escaped = true;
-      continue;
-    }
-    if (character === "[") {
-      inCharacterClass = true;
-      hasRegexSyntax = true;
-      continue;
-    }
-    if (character === "]" && inCharacterClass) {
-      inCharacterClass = false;
-      continue;
-    }
-    if (!inCharacterClass && character === "/") {
-      const suffix = candidate.slice(index + 1);
-      return hasRegexSyntax && /^(?:[dgimsuvy]*)(?:$|[),.;]|\.(?:exec|match|replace|search|split|test)\b)/.test(suffix);
-    }
-    if (!inCharacterClass && /[?*+(){}|^$]/.test(character)) hasRegexSyntax = true;
+function absolutePathCandidates(value) {
+  const found = [];
+  const pattern = /(?:^|[\s=])(?:"(\/[^"\n]+)"|'(\/[^'\n]+)'|(\/[^\s"';&|<>]+))/g;
+  for (const match of value.matchAll(pattern)) {
+    found.push(match[1] ?? match[2] ?? match[3]);
   }
-  return false;
+  return found;
+}
+
+function shellWords(command) {
+  const words = [];
+  let index = 0;
+  let segment = 0;
+  while (index < command.length) {
+    if (/\s/.test(command[index])) {
+      index += 1;
+      continue;
+    }
+    if (/[;&|<>]/.test(command[index])) {
+      segment += 1;
+      index += 1;
+      continue;
+    }
+
+    const start = index;
+    let value = "";
+    while (index < command.length && !/\s|[;&|<>]/.test(command[index])) {
+      const quote = command[index];
+      if (quote === "'") {
+        index += 1;
+        while (index < command.length && command[index] !== "'") {
+          value += command[index];
+          index += 1;
+        }
+        if (command[index] === "'") index += 1;
+        continue;
+      }
+      if (quote === '"') {
+        index += 1;
+        while (index < command.length && command[index] !== '"') {
+          if (command[index] === "\\" && index + 1 < command.length) index += 1;
+          value += command[index];
+          index += 1;
+        }
+        if (command[index] === '"') index += 1;
+        continue;
+      }
+      if (command[index] === "\\" && index + 1 < command.length) index += 1;
+      value += command[index];
+      index += 1;
+    }
+    words.push({ start, end: index, segment, value });
+  }
+  return words;
+}
+
+function nodeEvalScripts(command) {
+  const words = shellWords(command);
+  const scripts = [];
+  for (let index = 0; index < words.length; index += 1) {
+    const node = words[index];
+    if (node.value !== "node") continue;
+    for (let optionIndex = index + 1; optionIndex < words.length; optionIndex += 1) {
+      const option = words[optionIndex];
+      if (option.segment !== node.segment) break;
+      if (!["-e", "--eval"].includes(option.value)) continue;
+      const script = words[optionIndex + 1];
+      if (script?.segment === node.segment) scripts.push(script);
+      break;
+    }
+  }
+  return scripts;
+}
+
+function decodeJavaScriptEscape(source, index) {
+  const character = source[index];
+  const simple = { b: "\b", f: "\f", n: "\n", r: "\r", t: "\t", v: "\v" };
+  if (Object.hasOwn(simple, character)) return { character: simple[character], end: index + 1 };
+  if (character === "x" && /^[\da-f]{2}$/i.test(source.slice(index + 1, index + 3))) {
+    return { character: String.fromCodePoint(Number.parseInt(source.slice(index + 1, index + 3), 16)), end: index + 3 };
+  }
+  if (character === "u" && /^[\da-f]{4}$/i.test(source.slice(index + 1, index + 5))) {
+    return { character: String.fromCodePoint(Number.parseInt(source.slice(index + 1, index + 5), 16)), end: index + 5 };
+  }
+  return { character, end: index + 1 };
+}
+
+function javaScriptStringLiterals(source) {
+  const strings = [];
+  const regexPrefixKeywords = new Set([
+    "await", "case", "delete", "in", "instanceof", "new", "of", "return", "throw", "typeof", "void", "yield",
+  ]);
+  let canStartRegex = true;
+  let index = 0;
+
+  while (index < source.length) {
+    const character = source[index];
+    if (/\s/.test(character)) {
+      index += 1;
+      continue;
+    }
+    if (source.startsWith("//", index)) {
+      const newline = source.indexOf("\n", index + 2);
+      index = newline === -1 ? source.length : newline + 1;
+      continue;
+    }
+    if (source.startsWith("/*", index)) {
+      const close = source.indexOf("*/", index + 2);
+      index = close === -1 ? source.length : close + 2;
+      continue;
+    }
+    if (["'", '"', "`"].includes(character)) {
+      const quote = character;
+      let value = "";
+      index += 1;
+      while (index < source.length && source[index] !== quote) {
+        if (source[index] === "\\" && index + 1 < source.length) {
+          const decoded = decodeJavaScriptEscape(source, index + 1);
+          value += decoded.character;
+          index = decoded.end;
+        } else {
+          value += source[index];
+          index += 1;
+        }
+      }
+      if (source[index] === quote) index += 1;
+      strings.push(value);
+      canStartRegex = false;
+      continue;
+    }
+    if (character === "/" && canStartRegex) {
+      let escaped = false;
+      let inCharacterClass = false;
+      index += 1;
+      while (index < source.length) {
+        const regexCharacter = source[index];
+        if (escaped) {
+          escaped = false;
+        } else if (regexCharacter === "\\") {
+          escaped = true;
+        } else if (regexCharacter === "[") {
+          inCharacterClass = true;
+        } else if (regexCharacter === "]") {
+          inCharacterClass = false;
+        } else if (regexCharacter === "/" && !inCharacterClass) {
+          index += 1;
+          while (/[a-z]/i.test(source[index] ?? "")) index += 1;
+          break;
+        } else if (regexCharacter === "\n") {
+          break;
+        }
+        index += 1;
+      }
+      canStartRegex = false;
+      continue;
+    }
+    if (/[a-z_$]/i.test(character)) {
+      const start = index;
+      while (/[\w$]/.test(source[index] ?? "")) index += 1;
+      canStartRegex = regexPrefixKeywords.has(source.slice(start, index));
+      continue;
+    }
+    if (/\d/.test(character)) {
+      while (/[\w.]/.test(source[index] ?? "")) index += 1;
+      canStartRegex = false;
+      continue;
+    }
+    if (character === "/" && !canStartRegex) {
+      canStartRegex = true;
+      index += source[index + 1] === "=" ? 2 : 1;
+      continue;
+    }
+    canStartRegex = !/[)\]}.]/.test(character);
+    index += 1;
+  }
+  return strings;
+}
+
+function maskSpans(value, spans) {
+  let masked = "";
+  let cursor = 0;
+  for (const { start, end } of spans) {
+    masked += value.slice(cursor, start);
+    masked += " ".repeat(end - start);
+    cursor = end;
+  }
+  return masked + value.slice(cursor);
 }
 
 function shellAbsolutePaths(command) {
-  const found = [];
-  const pattern = /(?:^|[\s=])(?:"(\/[^"\n]+)"|'(\/[^'\n]+)'|(\/[^\s"';&|<>]+))/g;
-  for (const match of command.matchAll(pattern)) {
-    const candidate = match[1] ?? match[2] ?? match[3];
-    if (candidate === "//" || isJavaScriptRegexLiteral(candidate)) continue;
-    found.push(candidate);
+  const scripts = nodeEvalScripts(command);
+  const found = absolutePathCandidates(maskSpans(command, scripts));
+  for (const script of scripts) {
+    for (const value of javaScriptStringLiterals(script.value)) {
+      found.push(...absolutePathCandidates(` ${value}`));
+    }
   }
   return found;
 }

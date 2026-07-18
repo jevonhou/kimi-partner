@@ -181,18 +181,26 @@ test("runner blocks a reported write outside the allowed paths before it execute
 test("runner blocks a shell command that targets a path outside the Git root", async () => {
   await chmod(fakeKimi, 0o755);
   const projectPath = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-policy-"));
-  const forbiddenTargets = [
-    path.join(tmpdir(), `kimi-partner-forbidden-${Date.now()}.txt`),
-    "/Users/example/outside-project",
-    "/Applications/Kimi Partner.app",
-    "//server/share",
+  const tempTarget = path.join(tmpdir(), `kimi-partner-forbidden-${Date.now()}.txt`);
+  const forbiddenCommands = [
+    { command: `ls '${tempTarget}'`, target: tempTarget },
+    { command: "ls '/Users/example/outside-project'", target: "/Users/example/outside-project" },
+    { command: "ls '/Applications/Kimi Partner.app'", target: "/Applications/Kimi Partner.app" },
+    { command: "ls //server/share", target: "//server/share" },
+    { command: "cd /t?p/", target: "/t?p/" },
+    { command: "cd /t*p/", target: "/t*p/" },
+    { command: "cd /[t]mp/", target: "/[t]mp/" },
+    { command: String.raw`cd /t\mp/`, target: String.raw`/t\mp/` },
+    { command: "cd /U?ers/", target: "/U?ers/" },
+    { command: "cd /Applic*tions/", target: "/Applic*tions/" },
+    { command: String.raw`cd /\/server/`, target: String.raw`/\/server/` },
   ];
 
-  for (const [index, forbidden] of forbiddenTargets.entries()) {
+  for (const [index, { command, target }] of forbiddenCommands.entries()) {
     const taskDirectory = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-policy-state-"));
     const event = {
       role: "assistant",
-      tool_calls: [{ function: { name: "Bash", arguments: JSON.stringify({ command: `ls '${forbidden}'` }) } }],
+      tool_calls: [{ function: { name: "Bash", arguments: JSON.stringify({ command }) } }],
     };
 
     const result = await runKimiAttempt({
@@ -212,9 +220,9 @@ test("runner blocks a shell command that targets a path outside the Git root", a
       },
     });
 
-    assert.equal(result.success, false, forbidden);
-    assert.equal(result.policyViolation?.code, "SHELL_PATH_OUTSIDE_GIT_ROOT", forbidden);
-    assert.equal(result.policyViolation?.target, forbidden);
+    assert.equal(result.success, false, command);
+    assert.equal(result.policyViolation?.code, "SHELL_PATH_OUTSIDE_GIT_ROOT", command);
+    assert.equal(result.policyViolation?.target, target, command);
   }
 });
 
@@ -225,8 +233,10 @@ test("runner allows project-local node validation scripts with JavaScript commen
   const command = String.raw`node -e '
 const html = "<main></main>";
 // Check project-local markup without reading outside the Git root.
+//comment without a space
 const emoji = /[←-⇿⬀-⯿\u{1F000}-\u{1FAFF}]/u;
-console.log(/https?:\/\//.test(html), emoji.test(html));
+const ordinary = /foo/;
+console.log(/https?:\/\//.test(html), emoji.test(html), ordinary.test(html));
 '`;
   const event = {
     role: "assistant",
@@ -251,6 +261,46 @@ console.log(/https?:\/\//.test(html), emoji.test(html));
 
   assert.equal(result.success, true);
   assert.equal(result.policyViolation, null);
+});
+
+test("runner blocks external absolute paths inside node eval string literals", async () => {
+  await chmod(fakeKimi, 0o755);
+  const projectPath = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-js-string-policy-"));
+  const forbiddenTargets = [
+    "/tmp/x",
+    "/Users/x",
+    "/Applications/x",
+    "//server/share",
+  ];
+
+  for (const [index, target] of forbiddenTargets.entries()) {
+    const taskDirectory = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-js-string-policy-state-"));
+    const command = `node -e 'require("fs").readFileSync("${target}")'`;
+    const event = {
+      role: "assistant",
+      tool_calls: [{ function: { name: "Bash", arguments: JSON.stringify({ command }) } }],
+    };
+
+    const result = await runKimiAttempt({
+      taskId: `task-shell-js-string-policy-${index}`,
+      attempt: 1,
+      executable: fakeKimi,
+      projectPath,
+      prompt: "read project files",
+      modelAlias: "kimi-code/k3",
+      maxRuntimeMs: 2000,
+      policy: { gitRoot: projectPath, allowedPaths: ["src"] },
+      taskDirectory,
+      env: {
+        ...process.env,
+        FAKE_KIMI_TOOL_CALL: JSON.stringify(event),
+      },
+    });
+
+    assert.equal(result.success, false, command);
+    assert.equal(result.policyViolation?.code, "SHELL_PATH_OUTSIDE_GIT_ROOT", command);
+    assert.equal(result.policyViolation?.target, target, command);
+  }
 });
 
 test("runner blocks dependency installation even when the command has leading whitespace", async () => {
