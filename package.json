@@ -1,7 +1,7 @@
 {
   "name": "kimi-partner",
   "version": "0.1.0",
-  "description": "Delegate coding tasks to Kimi while Codex keeps scope, safety, and final verification.",
+  "description": "Bring Kimi's frontend implementation and visual taste into a Codex-controlled workflow.",
   "private": true,
   "license": "MIT",
   "author": "Jevon Hou",

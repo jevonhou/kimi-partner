@@ -1,7 +1,7 @@
 {
   "name": "kimi-partner",
   "version": "0.1.0",
-  "description": "Delegate explicitly approved frontend implementation tasks from Codex to local Kimi Code, then return them to Codex for verification.",
+  "description": "Bring Kimi's frontend implementation and visual taste into a Codex-controlled workflow with scoped delegation and independent verification.",
   "author": {
     "name": "Jevon Hou",
     "url": "https://github.com/jevonhou"
@@ -19,8 +19,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Kimi Partner",
-    "shortDescription": "Let Codex hand an approved frontend task to Kimi and verify the result.",
-    "longDescription": "Kimi Partner gives Codex an opt-in local delegation loop: start a Kimi Code task in a Git project, monitor it asynchronously, return review feedback to the same session, and keep final testing and browser acceptance with Codex.",
+    "shortDescription": "Use Kimi's frontend taste while Codex keeps control and verification.",
+    "longDescription": "Kimi Partner brings Kimi's frontend implementation and visual judgment into a Codex-controlled local workflow. Codex scopes the task and writable files, Kimi implements the interface, and Codex reviews the Git diff, runs tests, returns evidence-backed feedback, and owns final browser acceptance.",
     "developerName": "Jevon Hou",
     "category": "Productivity",
     "brandColor": "#2563EB",

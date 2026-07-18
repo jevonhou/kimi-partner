@@ -1,10 +1,10 @@
 <div align="center">
   <img src="assets/logo/kimi-partner-logo-256.png" width="144" alt="Kimi Partner logo">
   <h1>Kimi Partner</h1>
-  <p><strong>Delegate to Kimi. Keep Codex in control.</strong></p>
+  <p><strong>Bring Kimi's frontend taste into your Codex workflow.</strong></p>
   <p>
-    An opt-in Codex plugin for handing a scoped coding task to Kimi Code,
-    returning review feedback to the same session, and independently verifying the result.
+    Let Kimi handle a scoped frontend implementation while Codex keeps task planning,
+    change boundaries, code review, and final acceptance.
   </p>
   <p>
     <a href="README.zh-CN.md">简体中文</a> ·
@@ -15,7 +15,9 @@
 
 ## Why Kimi Partner?
 
-Different models are good at different things. Kimi Partner gives Codex users a deliberate way to try Kimi on a real local coding task without giving up orchestration, scope control, or final acceptance.
+Many developers value Kimi's visual judgment and polished frontend output—especially its handling of layout, spacing, hierarchy, color, component details, and overall style. Real projects still need clear task decomposition, controlled file scope, traceable changes, and dependable acceptance.
+
+Kimi Partner connects those needs. From inside Codex, you can explicitly hand a frontend task to Kimi and use its strengths in interface implementation and visual taste. Codex remains responsible for understanding the project, constraining writable files, reviewing the Git diff, running tests, and completing browser acceptance. You get both models' strengths in one real project without replacing your primary workflow.
 
 ```mermaid
 flowchart LR

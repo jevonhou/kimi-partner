@@ -1,14 +1,16 @@
 <div align="center">
   <img src="assets/logo/kimi-partner-logo-256.png" width="144" alt="Kimi Partner Logo">
   <h1>Kimi Partner</h1>
-  <p><strong>把任务交给 Kimi，把控制权留给 Codex。</strong></p>
-  <p>一个可选启用的 Codex 插件：让 Codex 把限定范围的本地编码任务交给 Kimi Code，再回到同一会话继续修改，并由 Codex 独立完成最终验收。</p>
+  <p><strong>让 Kimi 发挥前端审美，让 Codex 掌控整个交付。</strong></p>
+  <p>一个把 Kimi 的前端实现能力接入 Codex 工作流的插件：让 Kimi 完成限定范围的界面开发，再由 Codex 负责任务拆解、范围控制、代码审查和最终验收。</p>
   <p><a href="README.md">English</a> · <a href="SECURITY.md">安全说明</a></p>
 </div>
 
 ## 为什么做这个插件？
 
-不同模型各有所长。Kimi Partner 让你可以在真实项目里试用 Kimi 的实现能力，同时保留 Codex 的任务拆解、范围约束和最终验收能力。
+很多开发者喜欢 Kimi 在前端界面上的视觉判断和成品感，尤其是布局、间距、层级、配色、组件细节与整体风格。但在真实项目里，大家同样需要清晰的任务拆解、严格的修改范围、可追踪的代码变更和可靠的最终验收。
+
+Kimi Partner 就是为这个需求做的：你可以在 Codex 里明确选择把一项前端任务交给 Kimi，让它发挥界面实现与视觉审美方面的优势；Codex 则继续负责理解项目、限定可修改文件、检查 Git diff、运行测试和完成浏览器验收。这样不需要切换主工作流，也能在同一个真实项目中使用两个模型各自擅长的能力。
 
 Kimi 在这里是实现搭档，不是自动路由器，也不是最终审核者。
 
