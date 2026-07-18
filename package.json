@@ -4,7 +4,7 @@
   "description": "Delegate coding tasks to Kimi while Codex keeps scope, safety, and final verification.",
   "private": true,
   "license": "MIT",
-  "author": "JeongHau",
+  "author": "Jevon Hou",
   "homepage": "https://github.com/jevonhou/kimi-partner#readme",
   "repository": {
     "type": "git",

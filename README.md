@@ -139,4 +139,4 @@ Kimi Partner is an independent community project. It is not affiliated with, end
 
 ## License
 
-[MIT](LICENSE) © 2026 JeongHau
+[MIT](LICENSE) © 2026 Jevon Hou

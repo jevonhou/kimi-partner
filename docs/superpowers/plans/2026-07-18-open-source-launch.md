@@ -71,7 +71,7 @@ Expected: `Plugin validation passed`.
 
 - [ ] **Step 1: Add repository hygiene**
 
-Create `.gitignore` entries for `node_modules/`, `.DS_Store`, logs, coverage, local state, `.env*`, and generated temporary browser artifacts. Add the standard MIT license with copyright `2026 JeongHau`.
+Create `.gitignore` entries for `node_modules/`, `.DS_Store`, logs, coverage, local state, `.env*`, and generated temporary browser artifacts. Add the standard MIT license with copyright `2026 Jevon Hou`.
 
 - [ ] **Step 2: Rewrite the English README**
 

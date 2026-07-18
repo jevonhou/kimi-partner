@@ -113,4 +113,4 @@ Kimi Partner 是独立社区项目，与 OpenAI、Moonshot AI 或 Kimi 均无隶
 
 ## 许可证
 
-[MIT](LICENSE) © 2026 JeongHau
+[MIT](LICENSE) © 2026 Jevon Hou
