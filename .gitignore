@@ -13,3 +13,5 @@ npm-debug.log*
 .codex/kimi-partner/
 tasks/
 tmp/
+.superpowers/
+.worktrees/
