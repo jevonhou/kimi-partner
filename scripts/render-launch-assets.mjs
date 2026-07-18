@@ -6,6 +6,7 @@ import path from "node:path";
 const root = process.cwd();
 const chrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const jobs = [
+  ["assets/launch/source/social-preview.html", "assets/social/kimi-partner-social-preview.png", 1280, 640],
   ["assets/launch/source/launch-cover-16x9.html", "assets/launch/kimi-partner-launch-cover-16x9.png", 1280, 720],
   ["assets/launch/source/launch-cover-4x5.html", "assets/launch/kimi-partner-launch-cover-4x5.png", 1080, 1350],
 ];

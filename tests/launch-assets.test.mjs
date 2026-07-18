@@ -8,14 +8,17 @@ function pngDimensions(buffer) {
 }
 
 test("launch covers have exact platform dimensions", async () => {
+  const social = await readFile("assets/social/kimi-partner-social-preview.png");
   const horizontal = await readFile("assets/launch/kimi-partner-launch-cover-16x9.png");
   const vertical = await readFile("assets/launch/kimi-partner-launch-cover-4x5.png");
+  assert.deepEqual(pngDimensions(social), { width: 1280, height: 640 });
   assert.deepEqual(pngDimensions(horizontal), { width: 1280, height: 720 });
   assert.deepEqual(pngDimensions(vertical), { width: 1080, height: 1350 });
 });
 
 test("launch source keeps the designer-led positioning exact", async () => {
   for (const file of [
+    "assets/launch/source/social-preview.html",
     "assets/launch/source/launch-cover-16x9.html",
     "assets/launch/source/launch-cover-4x5.html",
   ]) {

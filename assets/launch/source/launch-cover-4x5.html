@@ -3,173 +3,38 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kimi Partner — Designer-led workflow</title>
-  <style>
-    * { box-sizing: border-box; }
-    html, body { width: 1080px; height: 1350px; margin: 0; overflow: hidden; }
-    body { color: #16181F; font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
-    .canvas {
-      width: 1080px;
-      height: 1350px;
-      position: relative;
-      overflow: hidden;
-      background: #F3F5FA;
-    }
-    .motif {
-      position: absolute;
-      top: -70px;
-      right: -150px;
-      width: 560px;
-      height: 560px;
-    }
-    .top {
-      position: relative;
-      z-index: 1;
-      padding: 64px 72px 0;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 13px;
-      color: #16181F;
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-    }
-    .brand img { width: 34px; height: 34px; object-fit: contain; }
-    .main {
-      position: relative;
-      z-index: 1;
-      padding: 118px 72px 0;
-    }
-    .eyebrow {
-      margin: 0 0 30px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      color: #2563EB;
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: 0.16em;
-    }
-    .eyebrow::before {
-      width: 38px;
-      height: 3px;
-      content: "";
-      background: #2563EB;
-    }
-    h1 {
-      margin: 0;
-      color: #16181F;
-      font-size: 84px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      line-height: 1.2;
-    }
-    h1 em { display: block; color: #7C4DFF; font-style: normal; }
-    .support {
-      max-width: 720px;
-      margin: 32px 0 0;
-      color: #5C6373;
-      font-size: 22px;
-      font-weight: 500;
-      letter-spacing: 0.01em;
-      line-height: 1.7;
-    }
-    .band {
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      height: 640px;
-      padding: 54px 72px 60px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      background: #16181F;
-    }
-    .band .motif-dark {
-      position: absolute;
-      right: -160px;
-      bottom: -170px;
-      width: 520px;
-      height: 520px;
-    }
-    .role {
-      position: relative;
-      padding: 34px 0;
-      display: flex;
-      align-items: baseline;
-      gap: 26px;
-      border-top: 1px solid rgba(255, 255, 255, 0.14);
-    }
-    .role:first-of-type {
-      padding-top: 4px;
-      border-top: none;
-    }
-    .role i {
-      width: 48px;
-      color: #6E9BFF;
-      font-size: 14px;
-      font-style: normal;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-    }
-    .role:nth-of-type(2) i { color: #A986FF; }
-    .role:nth-of-type(3) i { color: #C9CEDA; }
-    .role b { color: #FFFFFF; font-size: 30px; font-weight: 800; line-height: 1.2; }
-    .role span { margin-left: auto; color: #A3A9B6; font-size: 18px; line-height: 1.4; }
-    .foot {
-      position: relative;
-      margin-top: auto;
-      padding-top: 28px;
-      display: grid;
-      gap: 12px;
-      border-top: 1px solid rgba(255, 255, 255, 0.16);
-    }
-    .url-label {
-      color: #7E8494;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.22em;
-    }
-    .url {
-      color: #FFFFFF;
-      font-size: 38px;
-      font-weight: 800;
-      letter-spacing: 0;
-    }
-  </style>
+  <title>Kimi Partner — Editorial vertical cover</title>
+  <link rel="stylesheet" href="launch-system.css">
 </head>
 <body>
-  <main class="canvas">
-    <svg class="motif" viewBox="0 0 560 560" fill="none" aria-hidden="true">
-      <path d="M215 100 L85 280 L215 460" stroke="#2563EB" stroke-opacity="0.09" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M345 100 L475 280 L345 460" stroke="#7C4DFF" stroke-opacity="0.09" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/>
-      <rect x="252" y="252" width="56" height="56" rx="14" fill="#7C4DFF" fill-opacity="0.13"/>
-    </svg>
-    <div class="top">
-      <header class="brand"><img src="../../logo/kimi-partner-logo.png" alt=""><span>KIMI PARTNER</span></header>
-    </div>
-    <section class="main">
-      <p class="eyebrow">DESIGNER-LED WORKFLOW</p>
+  <main class="canvas canvas-vertical">
+    <header class="masthead masthead-vertical">
+      <p class="kicker"><span>DESIGNER-LED</span><b>OPEN SOURCE</b></p>
+      <p class="wordmark">KIMI PARTNER</p>
+    </header>
+
+    <section class="hero-copy hero-copy-vertical">
+      <p class="section-label">A CODEX PLUGIN FOR DESIGNER-LED WORKFLOWS</p>
       <h1>设计师定方向，<em>模型加速落地。</em></h1>
-      <p class="support">让 Kimi 发挥前端表现力，让 Codex 守住工程质量。</p>
+      <p class="support"><strong>Kimi</strong> 前端实现 <i>·</i> <strong>Codex</strong> 工程验收</p>
     </section>
-    <section class="band">
-      <article class="role"><i>01</i><b>设计师</b><span>目标 · 规范 · 判断</span></article>
-      <article class="role"><i>02</i><b>Kimi</b><span>前端实现 · 视觉完成度</span></article>
-      <article class="role"><i>03</i><b>Codex</b><span>范围控制 · 审查验收</span></article>
-      <footer class="foot">
-        <span class="url-label">GITHUB</span>
-        <span class="url">github.com/jevonhou/kimi-partner</span>
-      </footer>
-      <svg class="motif-dark" viewBox="0 0 520 520" fill="none" aria-hidden="true">
-        <path d="M215 95 L85 260 L215 425" stroke="#FFFFFF" stroke-opacity="0.05" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M340 95 L470 260 L340 425" stroke="#FFFFFF" stroke-opacity="0.05" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/>
-        <rect x="250" y="234" width="52" height="52" rx="13" fill="#A986FF" fill-opacity="0.16"/>
-      </svg>
+
+    <aside class="mark-board mark-board-vertical" aria-label="Kimi Partner brand mark">
+      <span class="measure measure-top">VISUAL SYSTEM / 01</span>
+      <img src="../../logo/kimi-partner-logo-256.png" alt="Kimi Partner Logo">
+      <span class="measure measure-bottom">DESIGN · IMPLEMENT · VERIFY</span>
+    </aside>
+
+    <section class="roles roles-vertical" aria-label="协作角色">
+      <article class="role role-designer"><i>01</i><b>设计师主导</b><span>目标 · 规范 · 判断</span></article>
+      <article class="role role-kimi"><i>02</i><b>模型加速实现</b><span>Kimi · 前端实现 · 视觉完成度</span></article>
+      <article class="role role-codex"><i>03</i><b>Codex 工程验收</b><span>范围控制 · 审查 · 测试 · 验收</span></article>
     </section>
+
+    <footer class="footer footer-vertical">
+      <p><img class="footer-mark" src="../../logo/kimi-partner-logo-256.png" alt="">KIMI PARTNER</p>
+      <p class="repository">github.com/jevonhou/kimi-partner</p>
+    </footer>
   </main>
 </body>
 </html>
