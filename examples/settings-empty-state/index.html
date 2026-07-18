@@ -9,11 +9,41 @@
   <body>
     <main class="app-shell" aria-label="通知设置示例">
       <aside class="sidebar" aria-label="设置导航">
-        <div class="brand">工作台</div>
+        <div class="brand">
+          <svg class="brand-mark" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#brand-gradient)" />
+            <path d="M8 12.5l2.6 2.6L16 9.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <defs>
+              <linearGradient id="brand-gradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#3b5bfd" />
+                <stop offset="1" stop-color="#7c3aed" />
+              </linearGradient>
+            </defs>
+          </svg>
+          工作台
+        </div>
         <nav>
-          <a href="#profile">个人资料</a>
-          <a class="is-active" href="#notifications" aria-current="page">通知</a>
-          <a href="#appearance">外观</a>
+          <a href="#profile">
+            <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="8" r="3.6" />
+              <path d="M5 19.5c1.2-3.2 3.9-4.8 7-4.8s5.8 1.6 7 4.8" />
+            </svg>
+            个人资料
+          </a>
+          <a class="is-active" href="#notifications" aria-current="page">
+            <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6" />
+              <path d="M10.3 19a2 2 0 0 0 3.4 0" />
+            </svg>
+            通知
+          </a>
+          <a href="#appearance">
+            <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5 5l1.6 1.6M17.4 17.4L19 19M19 5l-1.6 1.6M6.6 17.4L5 19" />
+            </svg>
+            外观
+          </a>
         </nav>
       </aside>
 
@@ -25,7 +55,16 @@
         </header>
 
         <section class="empty-state" id="notification-state" data-notification-state="empty" aria-live="polite">
-          <div class="state-icon" aria-hidden="true">◌</div>
+          <div class="state-icon" aria-hidden="true">
+            <svg class="icon-bell" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6" />
+              <path d="M10.3 19a2 2 0 0 0 3.4 0" />
+              <path d="M4.5 4.5l15 15" class="icon-bell-slash" />
+            </svg>
+            <svg class="icon-check" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12.5l4.5 4.5L19 7.5" />
+            </svg>
+          </div>
           <h2 id="state-title">还没有启用通知</h2>
           <p id="state-description">启用后，我们会在重要事项需要你处理时通知你。</p>
           <div class="actions">

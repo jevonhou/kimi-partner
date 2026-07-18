@@ -19,7 +19,11 @@
 
 The designer defines the goal, visual system, and acceptance criteria. Codex constrains the writable scope and starts the task. Kimi implements the frontend. Codex reviews the Git diff, runs tests, and completes browser acceptance. The designer still makes the final visual judgment.
 
-> A 30-second real workflow demo is in production. The current recording script lives in [`docs/launch/LAUNCH_KIT.zh-CN.md`](docs/launch/LAUNCH_KIT.zh-CN.md).
+![Kimi Partner real workflow: designer brief, scoped Kimi implementation, and Codex verification](assets/demo/kimi-partner-30s.gif)
+
+This 30-second demo comes from a real public-example task: Kimi changed exactly two approved files, left Git `HEAD` unchanged, and produced zero out-of-scope changes. Codex then ran 42 tests and verified the result at 1440×900 and 390×844. See the [public evidence record](docs/demo/DEMO_EVIDENCE.md).
+
+> Kimi Partner provides application-level guardrails, not an operating-system sandbox. Always inspect the actual diff and verify the result independently.
 
 ## Why Kimi Partner?
 
@@ -44,7 +48,7 @@ Kimi is an implementation partner here—not an automatic router and not the fin
 - **Persistent async tasks** — start a task, poll its state, and recover results across Codex task restarts.
 - **Same-session review loop** — return Codex's evidence-backed feedback to the captured Kimi session.
 - **Model continuity** — pin the model alias for every attempt; K3 sessions keep preserved thinking history.
-- **Bounded execution** — allowed paths, dependency-install controls, external-path checks, dangerous Git-command checks, and a hard per-attempt timeout.
+- **Bounded execution** — allowed paths, dependency-install controls, external-path checks, blocked Node inline/stdin execution, dangerous Git-command checks, and a hard per-attempt timeout.
 - **Git reconciliation** — changing `HEAD` or a file outside the allowed scope marks the task as failed.
 - **Codex-owned acceptance** — Kimi's summary is evidence, not proof; Codex still inspects the diff and runs the relevant tests and browser checks.
 

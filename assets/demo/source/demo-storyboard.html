@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kimi Partner — 30 秒真实工作流</title>
+  <link rel="stylesheet" href="demo-system.css">
+</head>
+<body data-frame="1">
+  <header class="masthead">
+    <p class="brand"><img src="../../logo/kimi-partner-logo-256.png" alt="">KIMI PARTNER</p>
+    <p class="step" id="step-label">01 / DESIGN BRIEF</p>
+  </header>
+
+  <main class="stage">
+    <section class="frame frame-1">
+      <div>
+        <p class="eyebrow">DESIGNER SETS THE STANDARD</p>
+        <h1>先定义目标，<br><em>再交给模型实现。</em></h1>
+        <p class="lead">真实项目从明确的设计目标、文件边界和验收标准开始。</p>
+      </div>
+      <article class="scope-card">
+        <div class="scope-row"><b>目标</b><span>完成通知设置页空状态</span></div>
+        <div class="scope-row"><b>允许</b><code>index.html<br>styles.css</code></div>
+        <div class="scope-row"><b>验收</b><span>布局 · 响应式 · 交互状态</span></div>
+      </article>
+    </section>
+
+    <section class="frame frame-2">
+      <div>
+        <p class="eyebrow">SCOPED HANDOFF</p>
+        <h1>Codex 限定范围，<br><em>Kimi 开始实现。</em></h1>
+        <p class="lead">任务只开放 2 个文件；依赖、Git 和项目外路径保持关闭。</p>
+      </div>
+      <article class="task-card">
+        <header><b>REAL TASK</b><span>● COMPLETED · 04:58</span></header>
+        <div class="task-body">
+          <p class="task-id">kp-29ec4b4b-752b-4080-96f7-04a40f87e2b2</p>
+          <div class="route">
+            <div class="route-node">设计师</div><span class="route-arrow">→</span>
+            <div class="route-node">Codex</div><span class="route-arrow">→</span>
+            <div class="route-node kimi">Kimi</div>
+          </div>
+          <div class="boundary"><span class="pill">2 allowed files</span><span class="pill">HEAD unchanged</span><span class="pill">0 out-of-scope</span></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="frame frame-3">
+      <div>
+        <p class="eyebrow">KIMI IMPLEMENTS</p>
+        <h1>前端结果，<br><em>在真实浏览器里看。</em></h1>
+        <div class="truth">
+          <span><i></i>正式 SVG 图标与完整交互状态</span>
+          <span><i></i>桌面与手机响应式布局</span>
+          <span><i></i>不以模型总结代替验收</span>
+        </div>
+      </div>
+      <div class="browser-shell">
+        <div class="browser-bar"><i class="browser-dot"></i><i class="browser-dot"></i><i class="browser-dot"></i></div>
+        <img src="../settings-kimi-result-desktop.png" alt="Kimi 完成的通知设置页">
+      </div>
+    </section>
+
+    <section class="frame frame-4">
+      <div>
+        <p class="eyebrow">CODEX VERIFIES</p>
+        <h1>完成不等于通过，<br><em>证据才算。</em></h1>
+        <p class="lead">Codex 重新核对实际变更、自动化测试与浏览器结果。</p>
+      </div>
+      <article class="verification">
+        <div class="check-row"><i class="check">✓</i><b>Git 范围对账</b><span>2 changed · 0 outside</span></div>
+        <div class="check-row"><i class="check">✓</i><b>项目测试</b><span>42 / 42 passed</span></div>
+        <div class="check-row"><i class="check">✓</i><b>浏览器验收</b><span>1440×900 · 390×844</span></div>
+      </article>
+    </section>
+
+    <section class="frame frame-5">
+      <div>
+        <p class="eyebrow">DESIGNER MAKES THE CALL</p>
+        <h1>设计师定方向，<br><em>模型加速落地。</em></h1>
+        <p class="lead">Kimi 发挥前端表现力，Codex 守住工程质量；最终视觉与体验判断仍由设计师负责。</p>
+        <p class="repo">github.com/jevonhou/kimi-partner</p>
+      </div>
+      <div class="final-mark"><img src="../../logo/kimi-partner-logo-256.png" alt="Kimi Partner"></div>
+    </section>
+  </main>
+
+  <footer class="footer"><strong>DESIGN · IMPLEMENT · VERIFY</strong><span>REAL TASK · PUBLIC EXAMPLE · APPLICATION-LEVEL GUARDRAILS</span></footer>
+
+  <script>
+    const frame = new URLSearchParams(window.location.search).get("frame") || "1";
+    const labels = { 1: "01 / DESIGN BRIEF", 2: "02 / SCOPED HANDOFF", 3: "03 / IMPLEMENTATION", 4: "04 / VERIFICATION", 5: "05 / DESIGN REVIEW" };
+    document.body.dataset.frame = frame;
+    document.querySelector("#step-label").textContent = labels[frame] || labels[1];
+  </script>
+</body>
+</html>
