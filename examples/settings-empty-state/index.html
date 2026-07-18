@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>通知设置</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" aria-label="通知设置示例">
+      <aside class="sidebar" aria-label="设置导航">
+        <div class="brand">工作台</div>
+        <nav>
+          <a href="#profile">个人资料</a>
+          <a class="is-active" href="#notifications" aria-current="page">通知</a>
+          <a href="#appearance">外观</a>
+        </nav>
+      </aside>
+
+      <section class="content" id="notifications">
+        <header class="page-header">
+          <p class="eyebrow">设置</p>
+          <h1>通知</h1>
+          <p>决定何时接收来自工作台的提醒。</p>
+        </header>
+
+        <section class="empty-state" id="notification-state" data-notification-state="empty" aria-live="polite">
+          <div class="state-icon" aria-hidden="true">◌</div>
+          <h2 id="state-title">还没有启用通知</h2>
+          <p id="state-description">启用后，我们会在重要事项需要你处理时通知你。</p>
+          <div class="actions">
+            <button type="button" id="enable-notifications" data-action="enable-notifications">启用通知</button>
+            <button type="button" class="secondary" id="configure-later" data-action="configure-later">稍后设置</button>
+          </div>
+          <p class="feedback" id="notification-feedback" data-feedback aria-live="polite"></p>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
