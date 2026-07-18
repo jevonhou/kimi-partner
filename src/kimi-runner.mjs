@@ -271,15 +271,17 @@ function nodeEvalScripts(command) {
   const scripts = [];
   for (let index = 0; index < words.length; index += 1) {
     const node = words[index];
-    if (node.value !== "node") continue;
+    if (!["node", "nodejs"].includes(path.basename(node.value))) continue;
     for (let optionIndex = index + 1; optionIndex < words.length; optionIndex += 1) {
       const option = words[optionIndex];
       if (option.segment !== node.segment) break;
-      if (option.value.startsWith("--eval=")) {
-        scripts.push({ ...option, value: option.value.slice("--eval=".length) });
+      const longInlinePrefix = ["--eval=", "--print="].find((prefix) => option.value.startsWith(prefix));
+      if (longInlinePrefix) {
+        scripts.push({ ...option, value: option.value.slice(longInlinePrefix.length) });
         break;
       }
-      if (!["-e", "--eval"].includes(option.value)) continue;
+      const isShortInlineOption = /^-[ep]+$/.test(option.value);
+      if (!isShortInlineOption && !["--eval", "--print"].includes(option.value)) continue;
       const script = words[optionIndex + 1];
       if (script?.segment === node.segment) scripts.push(script);
       break;
@@ -432,8 +434,37 @@ function nodeEvalPolicyViolation(command) {
     if (script.hasShellExpansion) {
       return { code: "NODE_EVAL_SHELL_EXPANSION_NOT_ALLOWED", command };
     }
-    if (javaScriptStringLiterals(script.value).hasTemplateInterpolation) {
+    const parsedScript = javaScriptStringLiterals(script.value);
+    if (parsedScript.hasTemplateInterpolation) {
       return { code: "NODE_EVAL_TEMPLATE_INTERPOLATION_NOT_ALLOWED", command };
+    }
+    return { code: "NODE_INLINE_EVAL_NOT_ALLOWED", command };
+  }
+  return null;
+}
+
+function nodeStdinPolicyViolation(command, gitRoot) {
+  const words = shellWords(command);
+  const allowedOptions = new Set(["-c", "--check", "--test", "--no-warnings", "--trace-warnings"]);
+  for (let index = 0; index < words.length; index += 1) {
+    const node = words[index];
+    if (!["node", "nodejs"].includes(path.basename(node.value))) continue;
+    let script = null;
+    for (let optionIndex = index + 1; optionIndex < words.length; optionIndex += 1) {
+      const option = words[optionIndex];
+      if (option.segment !== node.segment) break;
+      if (option.value === "-") return { code: "NODE_INLINE_EVAL_NOT_ALLOWED", command };
+      if (option.value.startsWith("-")) {
+        if (!allowedOptions.has(option.value)) return { code: "NODE_INLINE_EVAL_NOT_ALLOWED", command };
+        continue;
+      }
+      script = option;
+      break;
+    }
+    if (!script || script.hasShellExpansion) return { code: "NODE_INLINE_EVAL_NOT_ALLOWED", command };
+    const absoluteScript = path.resolve(gitRoot, script.value);
+    if (!isInside(gitRoot, absoluteScript)) {
+      return { code: "SHELL_PATH_OUTSIDE_GIT_ROOT", command, target: script.value };
     }
   }
   return null;
@@ -466,6 +497,8 @@ function inspectPolicy(event, policy) {
       const command = String(args.command ?? args.cmd ?? "");
       const evalViolation = nodeEvalPolicyViolation(command);
       if (evalViolation) return { ...evalViolation, tool: name };
+      const stdinViolation = nodeStdinPolicyViolation(command, policy.gitRoot);
+      if (stdinViolation) return { ...stdinViolation, tool: name };
       if (!policy.allowDependencyInstall && /(?:^|[;&|]\s*)\s*(?:sudo\s+)?(?:npm\s+(?:i|install)|pnpm\s+(?:add|install)|yarn\s+(?:add|install)|bun\s+(?:add|install)|pip\d*\s+install|uv\s+(?:add|pip\s+install)|brew\s+install)\b/i.test(command)) {
         return { code: "DEPENDENCY_INSTALL_NOT_ALLOWED", tool: name, command };
       }

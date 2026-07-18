@@ -29422,13 +29422,274 @@ function parseToolArguments(toolCall) {
     return {};
   }
 }
-function shellAbsolutePaths(command) {
+function absolutePathCandidates(value) {
   const found = [];
   const pattern = /(?:^|[\s=])(?:"(\/[^"\n]+)"|'(\/[^'\n]+)'|(\/[^\s"';&|<>]+))/g;
-  for (const match of command.matchAll(pattern)) {
+  for (const match of value.matchAll(pattern)) {
     found.push(match[1] ?? match[2] ?? match[3]);
   }
   return found;
+}
+function shellWords(command) {
+  const words = [];
+  let index = 0;
+  let segment = 0;
+  while (index < command.length) {
+    if (/\s/.test(command[index])) {
+      index += 1;
+      continue;
+    }
+    if (/[;&|<>]/.test(command[index])) {
+      segment += 1;
+      index += 1;
+      continue;
+    }
+    const start = index;
+    let value = "";
+    let hasShellExpansion = false;
+    while (index < command.length && !/\s|[;&|<>]/.test(command[index])) {
+      const quote = command[index];
+      if (quote === "'") {
+        index += 1;
+        while (index < command.length && command[index] !== "'") {
+          value += command[index];
+          index += 1;
+        }
+        if (command[index] === "'") index += 1;
+        continue;
+      }
+      if (quote === '"') {
+        index += 1;
+        while (index < command.length && command[index] !== '"') {
+          if (command[index] === "\\" && index + 1 < command.length) {
+            index += 1;
+          } else if (command[index] === "`" || command.startsWith("$(", index)) {
+            hasShellExpansion = true;
+          }
+          value += command[index];
+          index += 1;
+        }
+        if (command[index] === '"') index += 1;
+        continue;
+      }
+      if (command[index] === "\\" && index + 1 < command.length) {
+        index += 1;
+      } else if (command[index] === "`" || command.startsWith("$(", index)) {
+        hasShellExpansion = true;
+      }
+      value += command[index];
+      index += 1;
+    }
+    words.push({ start, end: index, hasShellExpansion, segment, value });
+  }
+  return words;
+}
+function nodeEvalScripts(command) {
+  const words = shellWords(command);
+  const scripts = [];
+  for (let index = 0; index < words.length; index += 1) {
+    const node = words[index];
+    if (!["node", "nodejs"].includes(path2.basename(node.value))) continue;
+    for (let optionIndex = index + 1; optionIndex < words.length; optionIndex += 1) {
+      const option = words[optionIndex];
+      if (option.segment !== node.segment) break;
+      const longInlinePrefix = ["--eval=", "--print="].find((prefix) => option.value.startsWith(prefix));
+      if (longInlinePrefix) {
+        scripts.push({ ...option, value: option.value.slice(longInlinePrefix.length) });
+        break;
+      }
+      const isShortInlineOption = /^-[ep]+$/.test(option.value);
+      if (!isShortInlineOption && !["--eval", "--print"].includes(option.value)) continue;
+      const script = words[optionIndex + 1];
+      if (script?.segment === node.segment) scripts.push(script);
+      break;
+    }
+  }
+  return scripts;
+}
+function decodeJavaScriptEscape(source, index) {
+  const character = source[index];
+  const simple = { b: "\b", f: "\f", n: "\n", r: "\r", t: "	", v: "\v" };
+  if (Object.hasOwn(simple, character)) return { character: simple[character], end: index + 1 };
+  if (character === "x" && /^[\da-f]{2}$/i.test(source.slice(index + 1, index + 3))) {
+    return { character: String.fromCodePoint(Number.parseInt(source.slice(index + 1, index + 3), 16)), end: index + 3 };
+  }
+  if (character === "u" && /^[\da-f]{4}$/i.test(source.slice(index + 1, index + 5))) {
+    return { character: String.fromCodePoint(Number.parseInt(source.slice(index + 1, index + 5), 16)), end: index + 5 };
+  }
+  if (character === "u" && source[index + 1] === "{") {
+    const close = source.indexOf("}", index + 2);
+    const codePoint = source.slice(index + 2, close);
+    if (close !== -1 && /^[\da-f]{1,6}$/i.test(codePoint) && Number.parseInt(codePoint, 16) <= 1114111) {
+      return { character: String.fromCodePoint(Number.parseInt(codePoint, 16)), end: close + 1 };
+    }
+  }
+  return { character, end: index + 1 };
+}
+function javaScriptStringLiterals(source) {
+  const strings = [];
+  const regexPrefixKeywords = /* @__PURE__ */ new Set([
+    "await",
+    "case",
+    "delete",
+    "in",
+    "instanceof",
+    "new",
+    "of",
+    "return",
+    "throw",
+    "typeof",
+    "void",
+    "yield"
+  ]);
+  let canStartRegex = true;
+  let hasTemplateInterpolation = false;
+  let index = 0;
+  while (index < source.length) {
+    const character = source[index];
+    if (/\s/.test(character)) {
+      index += 1;
+      continue;
+    }
+    if (source.startsWith("//", index)) {
+      const newline = source.indexOf("\n", index + 2);
+      index = newline === -1 ? source.length : newline + 1;
+      continue;
+    }
+    if (source.startsWith("/*", index)) {
+      const close = source.indexOf("*/", index + 2);
+      index = close === -1 ? source.length : close + 2;
+      continue;
+    }
+    if (["'", '"', "`"].includes(character)) {
+      const quote = character;
+      let value = "";
+      index += 1;
+      while (index < source.length && source[index] !== quote) {
+        if (quote === "`" && source.startsWith("${", index)) hasTemplateInterpolation = true;
+        if (source[index] === "\\" && index + 1 < source.length) {
+          const decoded = decodeJavaScriptEscape(source, index + 1);
+          value += decoded.character;
+          index = decoded.end;
+        } else {
+          value += source[index];
+          index += 1;
+        }
+      }
+      if (source[index] === quote) index += 1;
+      strings.push(value);
+      canStartRegex = false;
+      continue;
+    }
+    if (character === "/" && canStartRegex) {
+      let escaped = false;
+      let inCharacterClass = false;
+      index += 1;
+      while (index < source.length) {
+        const regexCharacter = source[index];
+        if (escaped) {
+          escaped = false;
+        } else if (regexCharacter === "\\") {
+          escaped = true;
+        } else if (regexCharacter === "[") {
+          inCharacterClass = true;
+        } else if (regexCharacter === "]") {
+          inCharacterClass = false;
+        } else if (regexCharacter === "/" && !inCharacterClass) {
+          index += 1;
+          while (/[a-z]/i.test(source[index] ?? "")) index += 1;
+          break;
+        } else if (regexCharacter === "\n") {
+          break;
+        }
+        index += 1;
+      }
+      canStartRegex = false;
+      continue;
+    }
+    if (/[a-z_$]/i.test(character)) {
+      const start = index;
+      while (/[\w$]/.test(source[index] ?? "")) index += 1;
+      canStartRegex = regexPrefixKeywords.has(source.slice(start, index));
+      continue;
+    }
+    if (/\d/.test(character)) {
+      while (/[\w.]/.test(source[index] ?? "")) index += 1;
+      canStartRegex = false;
+      continue;
+    }
+    if (["++", "--"].includes(source.slice(index, index + 2))) {
+      index += 2;
+      continue;
+    }
+    if (character === "/" && !canStartRegex) {
+      canStartRegex = true;
+      index += source[index + 1] === "=" ? 2 : 1;
+      continue;
+    }
+    canStartRegex = !/[)\]}.]/.test(character);
+    index += 1;
+  }
+  return { hasTemplateInterpolation, strings };
+}
+function maskSpans(value, spans) {
+  let masked = "";
+  let cursor = 0;
+  for (const { start, end } of spans) {
+    masked += value.slice(cursor, start);
+    masked += " ".repeat(end - start);
+    cursor = end;
+  }
+  return masked + value.slice(cursor);
+}
+function shellAbsolutePaths(command) {
+  const scripts = nodeEvalScripts(command);
+  const found = absolutePathCandidates(maskSpans(command, scripts));
+  for (const script of scripts) {
+    for (const value of javaScriptStringLiterals(script.value).strings) {
+      found.push(...absolutePathCandidates(` ${value}`));
+    }
+  }
+  return found;
+}
+function nodeEvalPolicyViolation(command) {
+  for (const script of nodeEvalScripts(command)) {
+    if (script.hasShellExpansion) {
+      return { code: "NODE_EVAL_SHELL_EXPANSION_NOT_ALLOWED", command };
+    }
+    const parsedScript = javaScriptStringLiterals(script.value);
+    if (parsedScript.hasTemplateInterpolation) {
+      return { code: "NODE_EVAL_TEMPLATE_INTERPOLATION_NOT_ALLOWED", command };
+    }
+    return { code: "NODE_INLINE_EVAL_NOT_ALLOWED", command };
+  }
+  return null;
+}
+function nodeStdinPolicyViolation(command, gitRoot) {
+  const words = shellWords(command);
+  const allowedOptions = /* @__PURE__ */ new Set(["-c", "--check", "--test", "--no-warnings", "--trace-warnings"]);
+  for (let index = 0; index < words.length; index += 1) {
+    const node = words[index];
+    if (!["node", "nodejs"].includes(path2.basename(node.value))) continue;
+    let script = null;
+    for (let optionIndex = index + 1; optionIndex < words.length; optionIndex += 1) {
+      const option = words[optionIndex];
+      if (option.segment !== node.segment) break;
+      if (option.value === "-") return { code: "NODE_INLINE_EVAL_NOT_ALLOWED", command };
+      if (option.value.startsWith("-")) {
+        if (!allowedOptions.has(option.value)) return { code: "NODE_INLINE_EVAL_NOT_ALLOWED", command };
+        continue;
+      }
+      script = option;
+      break;
+    }
+    if (!script || script.hasShellExpansion) return { code: "NODE_INLINE_EVAL_NOT_ALLOWED", command };
+    const absoluteScript = path2.resolve(gitRoot, script.value);
+    if (!isInside(gitRoot, absoluteScript)) {
+      return { code: "SHELL_PATH_OUTSIDE_GIT_ROOT", command, target: script.value };
+    }
+  }
+  return null;
 }
 function normalizeMacTempPath(candidate) {
   return candidate === "/tmp" || candidate.startsWith("/tmp/") ? `/private${candidate}` : candidate;
@@ -29452,6 +29713,10 @@ function inspectPolicy(event, policy) {
     }
     if (/^(bash|shell|runcommand)$/i.test(name)) {
       const command = String(args.command ?? args.cmd ?? "");
+      const evalViolation = nodeEvalPolicyViolation(command);
+      if (evalViolation) return { ...evalViolation, tool: name };
+      const stdinViolation = nodeStdinPolicyViolation(command, policy.gitRoot);
+      if (stdinViolation) return { ...stdinViolation, tool: name };
       if (!policy.allowDependencyInstall && /(?:^|[;&|]\s*)\s*(?:sudo\s+)?(?:npm\s+(?:i|install)|pnpm\s+(?:add|install)|yarn\s+(?:add|install)|bun\s+(?:add|install)|pip\d*\s+install|uv\s+(?:add|pip\s+install)|brew\s+install)\b/i.test(command)) {
         return { code: "DEPENDENCY_INSTALL_NOT_ALLOWED", tool: name, command };
       }
