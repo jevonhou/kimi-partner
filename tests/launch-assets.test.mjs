@@ -20,8 +20,8 @@ test("launch source keeps the designer-led positioning exact", async () => {
     "assets/launch/source/launch-cover-4x5.html",
   ]) {
     const source = await readFile(file, "utf8");
-    assert.match(source, /设计师定方向/);
-    assert.match(source, /模型加速落地/);
+    const headline = source.match(/<h1>([\s\S]*?)<\/h1>/)?.[1].replace(/<[^>]+>/g, "");
+    assert.equal(headline, "设计师定方向，模型加速落地。");
     assert.match(source, /Kimi/);
     assert.match(source, /Codex/);
     assert.doesNotMatch(source, /一键美化|替代设计师|降本|裁员/);
