@@ -6,6 +6,14 @@
   <p><a href="README.md">English</a> · <a href="SECURITY.md">安全说明</a></p>
 </div>
 
+## 设计师主导的工作流
+
+**设计师 → Codex → Kimi → Codex → 设计师**
+
+设计师定义目标、视觉规范和验收标准；Codex 限定修改范围并启动任务；Kimi 完成前端实现；Codex 检查 Git diff、运行测试并完成浏览器验收；最终视觉判断仍由设计师作出。
+
+> 30 秒真实演示正在制作。录制脚本与拍摄清单见 [`docs/launch/LAUNCH_KIT.zh-CN.md`](docs/launch/LAUNCH_KIT.zh-CN.md)。
+
 ## 为什么做这个插件？
 
 很多开发者喜欢 Kimi 在前端界面上的视觉判断和成品感，尤其是布局、间距、层级、配色、组件细节与整体风格。但在真实项目里，大家同样需要清晰的任务拆解、严格的修改范围、可追踪的代码变更和可靠的最终验收。

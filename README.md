@@ -13,6 +13,14 @@
   </p>
 </div>
 
+## Designer-led workflow
+
+**Designer → Codex → Kimi → Codex → Designer**
+
+The designer defines the goal, visual system, and acceptance criteria. Codex constrains the writable scope and starts the task. Kimi implements the frontend. Codex reviews the Git diff, runs tests, and completes browser acceptance. The designer still makes the final visual judgment.
+
+> A 30-second real workflow demo is in production. The current recording script lives in [`docs/launch/LAUNCH_KIT.zh-CN.md`](docs/launch/LAUNCH_KIT.zh-CN.md).
+
 ## Why Kimi Partner?
 
 Many developers value Kimi's visual judgment and polished frontend output—especially its handling of layout, spacing, hierarchy, color, component details, and overall style. Real projects still need clear task decomposition, controlled file scope, traceable changes, and dependable acceptance.

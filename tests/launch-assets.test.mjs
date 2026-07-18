@@ -36,3 +36,12 @@ test("launch kit contains every promised channel and safety boundary", async () 
   assert.match(copy, /设计师定方向，模型加速落地/);
   assert.doesNotMatch(copy, /设计师没用了|一键替代设计师|裁员神器/);
 });
+
+test("both READMEs expose the designer-led demo flow", async () => {
+  const english = await readFile("README.md", "utf8");
+  const chinese = await readFile("README.zh-CN.md", "utf8");
+  assert.match(english, /Designer-led workflow/);
+  assert.match(english, /Designer → Codex → Kimi → Codex → Designer/);
+  assert.match(chinese, /设计师主导的工作流/);
+  assert.match(chinese, /设计师 → Codex → Kimi → Codex → 设计师/);
+});
