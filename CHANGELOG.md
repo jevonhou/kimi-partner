@@ -4,6 +4,19 @@ All notable changes to Kimi Partner are documented here.
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-07-18
+
+### Changed
+
+- `wait_kimi_task` now defaults to the verified 5-minute maximum instead of 45 seconds.
+- The fallback polling suggestion increased from 20 seconds to 60 seconds.
+- The Skill explicitly requests one 300-second wait at a time and avoids narrating unchanged active state.
+
+### Verification
+
+- Real Codex-host probes completed 120-second and 300-second MCP calls without a 60-second cutoff.
+- Full automated, isolated-bundle, syntax, and dependency-audit checks pass.
+
 ## [0.1.2] - 2026-07-18
 
 ### Added
@@ -36,6 +49,7 @@ All notable changes to Kimi Partner are documented here.
 - Bundled MCP server is syntax-checked and tested from an isolated directory.
 - Dependency audit reports zero known vulnerabilities.
 
-[Unreleased]: https://github.com/jevonhou/kimi-partner/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/jevonhou/kimi-partner/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/jevonhou/kimi-partner/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/jevonhou/kimi-partner/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/jevonhou/kimi-partner/compare/v0.1.0...v0.1.1

@@ -68,7 +68,7 @@ function statusText(task) {
 }
 
 export function createMcpServer({ service = createTaskService() } = {}) {
-  const server = new McpServer({ name: "Kimi Partner", version: "0.1.2" });
+  const server = new McpServer({ name: "Kimi Partner", version: "0.1.3" });
 
   server.registerTool("start_kimi_task", {
     title: "Start an approved Kimi coding task",
@@ -110,7 +110,7 @@ export function createMcpServer({ service = createTaskService() } = {}) {
     description: "Wait up to five minutes for a persistent Kimi task to finish, ignoring intermediate phase updates. A timed-out active task returns only compact status; a terminal task returns the full task, attempts, and Git change receipt for Codex review.",
     inputSchema: {
       task_id: taskIdSchema,
-      wait_ms: z.number().int().min(1_000).max(300_000).default(45_000),
+      wait_ms: z.number().int().min(1_000).max(300_000).default(300_000),
     },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   }, safe(async (args) => {

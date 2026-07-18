@@ -145,7 +145,7 @@ test("get waits for a state change and reports missing tasks safely", async () =
   const result = await service.get({ task_id: "task-1", wait_ms: 1000 });
   assert.equal(result.status, "running");
   assert.equal(result.detail, "active");
-  assert.equal(result.suggestedPollMs, 20_000);
+  assert.equal(result.suggestedPollMs, 60_000);
   assert.deepEqual(Object.keys(result).sort(), [
     "detail",
     "isTerminal",
@@ -158,7 +158,7 @@ test("get waits for a state change and reports missing tasks safely", async () =
   await assert.rejects(service.get({ task_id: "missing" }), /not found/i);
 });
 
-test("wait supports long waits and stops after a bounded number of status checks", async () => {
+test("wait defaults to five minutes and stops after a bounded number of status checks", async () => {
   const stateRoot = await mkdtemp(path.join(tmpdir(), "kimi-partner-long-wait-state-"));
   const repo = await createRepo();
   let sleepCalls = 0;
@@ -174,12 +174,12 @@ test("wait supports long waits and stops after a bounded number of status checks
   });
   await service.start({ project_path: repo, task: "x", allowed_paths: ["src"] });
 
-  const result = await service.wait({ task_id: "task-1", wait_ms: 120_000 });
+  const result = await service.wait({ task_id: "task-1" });
 
   assert.equal(result.status, "queued");
   assert.equal(result.detail, "active");
-  assert.equal(result.suggestedPollMs, 20_000);
-  assert.equal(sleepCalls, 24);
+  assert.equal(result.suggestedPollMs, 60_000);
+  assert.equal(sleepCalls, 60);
   await assert.rejects(
     service.wait({ task_id: "task-1", wait_ms: 300_001 }),
     /between 1000 and 300000/,

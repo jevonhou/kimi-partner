@@ -32,7 +32,7 @@ function fakeService() {
       return { taskId, status: "completed", phase: "completed", summary: "done" };
     },
     async wait({ task_id: taskId }) {
-      return { taskId, status: "running", phase: "running", detail: "active", suggestedPollMs: 20_000 };
+      return { taskId, status: "running", phase: "running", detail: "active", suggestedPollMs: 60_000 };
     },
     async continue() {
       return { taskId: "task-1", status: "continuing", phase: "continuing" };
@@ -60,7 +60,7 @@ test("MCP server exposes the long-wait tool alongside the four task controls", a
     assert.ok(start.inputSchema.properties.max_runtime_minutes);
     assert.ok(start.inputSchema.properties.allow_dependency_install);
     const wait = tools.tools.find((tool) => tool.name === "wait_kimi_task");
-    assert.equal(wait.inputSchema.properties.wait_ms.default, 45_000);
+    assert.equal(wait.inputSchema.properties.wait_ms.default, 300_000);
     assert.equal(wait.inputSchema.properties.wait_ms.maximum, 300_000);
   });
 });
@@ -72,7 +72,7 @@ test("wait_kimi_task returns compact active status", async () => {
       arguments: { task_id: "task-1", wait_ms: 120_000 },
     });
     assert.equal(result.structuredContent.detail, "active");
-    assert.equal(result.structuredContent.suggestedPollMs, 20_000);
+    assert.equal(result.structuredContent.suggestedPollMs, 60_000);
     assert.doesNotMatch(result.content[0].text, /poll/i);
   });
 });

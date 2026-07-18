@@ -30280,7 +30280,7 @@ function normalizeGetWait(value) {
   return value;
 }
 function normalizeLongWait(value) {
-  if (value === void 0) return 45e3;
+  if (value === void 0) return 3e5;
   if (!Number.isInteger(value) || value < 1e3 || value > 3e5) {
     throw new Error("wait_ms must be an integer between 1000 and 300000");
   }
@@ -30296,7 +30296,7 @@ function presentTask(task, { compactActive = false } = {}) {
       detail: "active",
       isTerminal: false,
       updatedAt: task.updatedAt,
-      suggestedPollMs: 2e4
+      suggestedPollMs: 6e4
     };
   }
   return {
@@ -30326,7 +30326,7 @@ function presentTask(task, { compactActive = false } = {}) {
     completedAt: task.completedAt ?? null,
     detail: isTerminal2 ? "terminal" : "full",
     isTerminal: isTerminal2,
-    suggestedPollMs: isTerminal2 ? 0 : 2e4
+    suggestedPollMs: isTerminal2 ? 0 : 6e4
   };
 }
 function createTaskService({
@@ -30677,7 +30677,7 @@ function statusText(task) {
   return pieces.join(" ");
 }
 function createMcpServer({ service = createTaskService() } = {}) {
-  const server = new McpServer({ name: "Kimi Partner", version: "0.1.2" });
+  const server = new McpServer({ name: "Kimi Partner", version: "0.1.3" });
   server.registerTool("start_kimi_task", {
     title: "Start an approved Kimi coding task",
     description: "Start Kimi Code only after the user explicitly asks for Kimi or approves it for this task. Requires a local Git worktree and scoped allowed paths; Codex must wait, inspect the diff, and independently verify the result.",
@@ -30716,7 +30716,7 @@ function createMcpServer({ service = createTaskService() } = {}) {
     description: "Wait up to five minutes for a persistent Kimi task to finish, ignoring intermediate phase updates. A timed-out active task returns only compact status; a terminal task returns the full task, attempts, and Git change receipt for Codex review.",
     inputSchema: {
       task_id: taskIdSchema,
-      wait_ms: external_exports3.number().int().min(1e3).max(3e5).default(45e3)
+      wait_ms: external_exports3.number().int().min(1e3).max(3e5).default(3e5)
     },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
   }, safe(async (args) => {

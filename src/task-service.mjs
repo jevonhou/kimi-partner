@@ -94,7 +94,7 @@ function normalizeGetWait(value) {
 }
 
 function normalizeLongWait(value) {
-  if (value === undefined) return 45_000;
+  if (value === undefined) return 300_000;
   if (!Number.isInteger(value) || value < 1_000 || value > 300_000) {
     throw new Error("wait_ms must be an integer between 1000 and 300000");
   }
@@ -111,7 +111,7 @@ function presentTask(task, { compactActive = false } = {}) {
       detail: "active",
       isTerminal: false,
       updatedAt: task.updatedAt,
-      suggestedPollMs: 20_000,
+      suggestedPollMs: 60_000,
     };
   }
   return {
@@ -141,7 +141,7 @@ function presentTask(task, { compactActive = false } = {}) {
     completedAt: task.completedAt ?? null,
     detail: isTerminal ? "terminal" : "full",
     isTerminal,
-    suggestedPollMs: isTerminal ? 0 : 20_000,
+    suggestedPollMs: isTerminal ? 0 : 60_000,
   };
 }
 

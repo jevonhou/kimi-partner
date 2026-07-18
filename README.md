@@ -64,9 +64,9 @@ Kimi is an implementation partner here—not an automatic router and not the fin
 
 ### Efficient waiting protocol
 
-Use `get_kimi_task` for a quick snapshot or a backward-compatible wait of up to 30 seconds. For normal active work, use `wait_kimi_task`: it ignores intermediate phase updates and returns only when the task finishes or the wait expires. It defaults to 45 seconds—leaving headroom for MCP transports with a 60-second request timeout—and clients that support longer tool calls may request up to 300 seconds.
+Use `get_kimi_task` for a quick snapshot or a backward-compatible wait of up to 30 seconds. For normal active work, use `wait_kimi_task`: it ignores intermediate phase updates and returns only when the task finishes or the wait expires. It defaults to 300 seconds. Real Codex-host probes completed both 120-second and 300-second MCP calls without a 60-second cutoff.
 
-While a task is active, both read tools return only `taskId`, `status`, `phase`, `updatedAt`, terminal/detail flags, and a 20-second fallback polling suggestion. Once the task is terminal, the response expands to the complete task, attempts, summary/error, and Git change receipt. This keeps repeated status reads inexpensive without weakening final review evidence.
+While a task is active, both read tools return only `taskId`, `status`, `phase`, `updatedAt`, terminal/detail flags, and a 60-second fallback polling suggestion. Once the task is terminal, the response expands to the complete task, attempts, summary/error, and Git change receipt. This keeps repeated status reads inexpensive without weakening final review evidence.
 
 ## Requirements
 

@@ -1,6 +1,6 @@
 {
   "name": "kimi-partner",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Bring Kimi's frontend implementation and visual taste into a Codex-controlled workflow with scoped delegation and independent verification.",
   "author": {
     "name": "Jevon Hou",
