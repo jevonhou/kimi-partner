@@ -29,7 +29,13 @@ async function createRepo() {
   return root;
 }
 
-function serviceHarness({ stateRoot, ids = ["task-1", "task-2", "task-3"] } = {}) {
+function serviceHarness({
+  stateRoot,
+  ids = ["task-1", "task-2", "task-3"],
+  waitPollIntervalMs,
+  sleep,
+  now,
+} = {}) {
   const launched = [];
   const killed = [];
   let index = 0;
@@ -48,6 +54,9 @@ function serviceHarness({ stateRoot, ids = ["task-1", "task-2", "task-3"] } = {}
     getProcessCommand: async (pid) => `/usr/bin/node /plugin/dist/mcp-server.mjs --worker ${launched.find((entry) => entry.pid === pid)?.taskId} --state-root ${stateRoot}`,
     killProcessGroup: async (pid, signal) => killed.push({ pid, signal }),
     workerEntrypoint: "/plugin/dist/mcp-server.mjs",
+    waitPollIntervalMs,
+    sleep,
+    now,
   });
   return { service, launched, killed, processAlive };
 }
@@ -135,7 +144,115 @@ test("get waits for a state change and reports missing tasks safely", async () =
   }, 50);
   const result = await service.get({ task_id: "task-1", wait_ms: 1000 });
   assert.equal(result.status, "running");
+  assert.equal(result.detail, "active");
+  assert.equal(result.suggestedPollMs, 20_000);
+  assert.deepEqual(Object.keys(result).sort(), [
+    "detail",
+    "isTerminal",
+    "phase",
+    "status",
+    "suggestedPollMs",
+    "taskId",
+    "updatedAt",
+  ]);
   await assert.rejects(service.get({ task_id: "missing" }), /not found/i);
+});
+
+test("wait supports long waits and stops after a bounded number of status checks", async () => {
+  const stateRoot = await mkdtemp(path.join(tmpdir(), "kimi-partner-long-wait-state-"));
+  const repo = await createRepo();
+  let sleepCalls = 0;
+  let clock = 0;
+  const { service } = serviceHarness({
+    stateRoot,
+    waitPollIntervalMs: 5_000,
+    now: () => clock,
+    sleep: async (milliseconds) => {
+      sleepCalls += 1;
+      clock += milliseconds;
+    },
+  });
+  await service.start({ project_path: repo, task: "x", allowed_paths: ["src"] });
+
+  const result = await service.wait({ task_id: "task-1", wait_ms: 120_000 });
+
+  assert.equal(result.status, "queued");
+  assert.equal(result.detail, "active");
+  assert.equal(result.suggestedPollMs, 20_000);
+  assert.equal(sleepCalls, 24);
+  await assert.rejects(
+    service.wait({ task_id: "task-1", wait_ms: 300_001 }),
+    /between 1000 and 300000/,
+  );
+});
+
+test("wait ignores intermediate progress and returns as soon as the task is terminal", async () => {
+  const stateRoot = await mkdtemp(path.join(tmpdir(), "kimi-partner-terminal-wait-state-"));
+  const repo = await createRepo();
+  const store = createStateStore({ stateRoot });
+  let sleepCalls = 0;
+  let clock = 0;
+  const { service } = serviceHarness({
+    stateRoot,
+    waitPollIntervalMs: 5_000,
+    now: () => clock,
+    sleep: async (milliseconds) => {
+      sleepCalls += 1;
+      clock += milliseconds;
+      if (sleepCalls === 1) {
+        await store.updateTask("task-1", (task) => ({
+          ...task,
+          status: "running",
+          phase: "implementing",
+          updatedAt: new Date().toISOString(),
+        }));
+      }
+      if (sleepCalls === 3) {
+        await store.updateTask("task-1", (task) => ({
+          ...task,
+          status: "completed",
+          phase: "completed",
+          changeReceipt: { changedFiles: [], outOfScopeFiles: [] },
+          completedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }));
+      }
+    },
+  });
+  await service.start({ project_path: repo, task: "x", allowed_paths: ["src"] });
+
+  const result = await service.wait({ task_id: "task-1", wait_ms: 120_000 });
+
+  assert.equal(sleepCalls, 3);
+  assert.equal(result.status, "completed");
+  assert.equal(result.detail, "terminal");
+  assert.ok(result.changeReceipt);
+});
+
+test("terminal reads return the complete task and change receipt", async () => {
+  const stateRoot = await mkdtemp(path.join(tmpdir(), "kimi-partner-terminal-read-state-"));
+  const repo = await createRepo();
+  const { service } = serviceHarness({ stateRoot });
+  await service.start({ project_path: repo, task: "x", allowed_paths: ["src"] });
+  const store = createStateStore({ stateRoot });
+  await store.updateTask("task-1", (task) => ({
+    ...task,
+    status: "completed",
+    phase: "completed",
+    summary: "done",
+    changeReceipt: { changedFiles: ["src/card.css"], outOfScopeFiles: [] },
+    completedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }));
+
+  const result = await service.get({ task_id: "task-1" });
+
+  assert.equal(result.detail, "terminal");
+  assert.equal(result.isTerminal, true);
+  assert.equal(result.suggestedPollMs, 0);
+  assert.deepEqual(result.allowedPaths, ["src"]);
+  assert.deepEqual(result.changeReceipt.changedFiles, ["src/card.css"]);
+  assert.equal(result.attempts.length, 1);
 });
 
 test("continue requires a terminal task and captured session, then appends an attempt", async () => {

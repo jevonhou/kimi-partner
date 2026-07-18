@@ -24,12 +24,13 @@ Use Kimi as an optional implementation partner while Codex retains orchestration
 
 1. Call `start_kimi_task` with the absolute project path, scoped relative paths, task, acceptance criteria, and context files. Keep the default 30-minute attempt limit unless the task clearly needs a bounded increase.
 2. Tell the user the returned task ID and scope once.
-3. Poll with `get_kimi_task`; use its bounded wait rather than tight polling.
+3. Call `wait_kimi_task` and normally keep its 45-second default. Do not repeatedly call `get_kimi_task` while a task is active; reserve it for an immediate snapshot or compatibility fallback.
 4. Do not modify the same project while the Kimi task is active.
-5. When terminal, inspect the change receipt and any out-of-scope warning before reading Kimi's summary.
-6. Independently inspect `git diff`, run relevant build/test/lint/type checks, and use a real browser for UI acceptance.
-7. If verification fails, call `continue_kimi_task` with specific evidence and re-run the same verification.
-8. Call `cancel_kimi_task` only when the user explicitly asks to stop the task.
+5. If a wait returns an active compact status, wait again without narrating unchanged state. Use the 20-second `suggestedPollMs` only when long-wait calls are unavailable.
+6. When terminal, inspect the complete task, change receipt, and any out-of-scope warning before reading Kimi's summary.
+7. Independently inspect `git diff`, run relevant build/test/lint/type checks, and use a real browser for UI acceptance.
+8. If verification fails, call `continue_kimi_task` with specific evidence and re-run the same verification.
+9. Call `cancel_kimi_task` only when the user explicitly asks to stop the task.
 
 ## Safety contract
 

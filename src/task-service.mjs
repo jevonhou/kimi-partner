@@ -85,7 +85,7 @@ function normalizeAcceptance(value, fallback) {
   return value.map((entry) => entry.trim());
 }
 
-function normalizeWait(value) {
+function normalizeGetWait(value) {
   if (value === undefined) return 0;
   if (!Number.isInteger(value) || value < 0 || value > 30_000) {
     throw new Error("wait_ms must be an integer between 0 and 30000");
@@ -93,7 +93,27 @@ function normalizeWait(value) {
   return value;
 }
 
-function presentTask(task) {
+function normalizeLongWait(value) {
+  if (value === undefined) return 45_000;
+  if (!Number.isInteger(value) || value < 1_000 || value > 300_000) {
+    throw new Error("wait_ms must be an integer between 1000 and 300000");
+  }
+  return value;
+}
+
+function presentTask(task, { compactActive = false } = {}) {
+  const isTerminal = TERMINAL_STATUSES.has(task.status);
+  if (compactActive && !isTerminal) {
+    return {
+      taskId: task.id,
+      status: task.status,
+      phase: task.phase,
+      detail: "active",
+      isTerminal: false,
+      updatedAt: task.updatedAt,
+      suggestedPollMs: 20_000,
+    };
+  }
   return {
     taskId: task.id,
     status: task.status,
@@ -119,7 +139,9 @@ function presentTask(task) {
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
     completedAt: task.completedAt ?? null,
-    suggestedPollMs: TERMINAL_STATUSES.has(task.status) ? 0 : 1500,
+    detail: isTerminal ? "terminal" : "full",
+    isTerminal,
+    suggestedPollMs: isTerminal ? 0 : 20_000,
   };
 }
 
@@ -133,6 +155,9 @@ export function createTaskService({
   getProcessCommand = defaultGetProcessCommand,
   killProcessGroup = defaultKillProcessGroup,
   workerEntrypoint = process.argv[1],
+  waitPollIntervalMs = 1_000,
+  sleep = delay,
+  now = Date.now,
 } = {}) {
   const store = createStateStore({ stateRoot, processAlive });
 
@@ -219,20 +244,31 @@ export function createTaskService({
     return presentTask(await launchPersistedTask(taskId, validated.gitRoot));
   }
 
-  async function get(input) {
-    const taskId = requireTaskId(input?.task_id);
-    const waitMs = normalizeWait(input?.wait_ms);
+  async function readWithWait(taskId, waitMs, { terminalOnly = false } = {}) {
     let task = await store.readTask(taskId);
-    if (!waitMs || TERMINAL_STATUSES.has(task.status)) return presentTask(task);
+    if (!waitMs || TERMINAL_STATUSES.has(task.status)) return task;
 
     const initialUpdatedAt = task.updatedAt;
-    const deadline = Date.now() + waitMs;
-    while (Date.now() < deadline) {
-      await delay(Math.min(100, Math.max(1, deadline - Date.now())));
+    const deadline = now() + waitMs;
+    while (now() < deadline) {
+      await sleep(Math.min(waitPollIntervalMs, Math.max(1, deadline - now())));
       task = await store.readTask(taskId);
-      if (task.updatedAt !== initialUpdatedAt || TERMINAL_STATUSES.has(task.status)) break;
+      if (TERMINAL_STATUSES.has(task.status)) break;
+      if (!terminalOnly && task.updatedAt !== initialUpdatedAt) break;
     }
-    return presentTask(task);
+    return task;
+  }
+
+  async function get(input) {
+    const taskId = requireTaskId(input?.task_id);
+    const waitMs = normalizeGetWait(input?.wait_ms);
+    return presentTask(await readWithWait(taskId, waitMs), { compactActive: true });
+  }
+
+  async function wait(input) {
+    const taskId = requireTaskId(input?.task_id);
+    const waitMs = normalizeLongWait(input?.wait_ms);
+    return presentTask(await readWithWait(taskId, waitMs, { terminalOnly: true }), { compactActive: true });
   }
 
   async function continueTask(input) {
@@ -307,6 +343,7 @@ export function createTaskService({
     store,
     start,
     get,
+    wait,
     continue: continueTask,
     cancel,
   };

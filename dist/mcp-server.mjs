@@ -30272,14 +30272,33 @@ function normalizeAcceptance(value, fallback) {
   }
   return value.map((entry) => entry.trim());
 }
-function normalizeWait(value) {
+function normalizeGetWait(value) {
   if (value === void 0) return 0;
   if (!Number.isInteger(value) || value < 0 || value > 3e4) {
     throw new Error("wait_ms must be an integer between 0 and 30000");
   }
   return value;
 }
-function presentTask(task) {
+function normalizeLongWait(value) {
+  if (value === void 0) return 45e3;
+  if (!Number.isInteger(value) || value < 1e3 || value > 3e5) {
+    throw new Error("wait_ms must be an integer between 1000 and 300000");
+  }
+  return value;
+}
+function presentTask(task, { compactActive = false } = {}) {
+  const isTerminal2 = TERMINAL_STATUSES.has(task.status);
+  if (compactActive && !isTerminal2) {
+    return {
+      taskId: task.id,
+      status: task.status,
+      phase: task.phase,
+      detail: "active",
+      isTerminal: false,
+      updatedAt: task.updatedAt,
+      suggestedPollMs: 2e4
+    };
+  }
   return {
     taskId: task.id,
     status: task.status,
@@ -30305,7 +30324,9 @@ function presentTask(task) {
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
     completedAt: task.completedAt ?? null,
-    suggestedPollMs: TERMINAL_STATUSES.has(task.status) ? 0 : 1500
+    detail: isTerminal2 ? "terminal" : "full",
+    isTerminal: isTerminal2,
+    suggestedPollMs: isTerminal2 ? 0 : 2e4
   };
 }
 function createTaskService({
@@ -30317,7 +30338,10 @@ function createTaskService({
   launchWorker = defaultLaunchWorker,
   getProcessCommand = defaultGetProcessCommand,
   killProcessGroup = defaultKillProcessGroup,
-  workerEntrypoint = process.argv[1]
+  workerEntrypoint = process.argv[1],
+  waitPollIntervalMs = 1e3,
+  sleep = delay,
+  now = Date.now
 } = {}) {
   const store = createStateStore({ stateRoot, processAlive });
   async function launchPersistedTask(taskId, gitRoot) {
@@ -30404,19 +30428,28 @@ function createTaskService({
     }
     return presentTask(await launchPersistedTask(taskId, validated.gitRoot));
   }
+  async function readWithWait(taskId, waitMs, { terminalOnly = false } = {}) {
+    let task = await store.readTask(taskId);
+    if (!waitMs || TERMINAL_STATUSES.has(task.status)) return task;
+    const initialUpdatedAt = task.updatedAt;
+    const deadline = now() + waitMs;
+    while (now() < deadline) {
+      await sleep(Math.min(waitPollIntervalMs, Math.max(1, deadline - now())));
+      task = await store.readTask(taskId);
+      if (TERMINAL_STATUSES.has(task.status)) break;
+      if (!terminalOnly && task.updatedAt !== initialUpdatedAt) break;
+    }
+    return task;
+  }
   async function get(input) {
     const taskId = requireTaskId(input?.task_id);
-    const waitMs = normalizeWait(input?.wait_ms);
-    let task = await store.readTask(taskId);
-    if (!waitMs || TERMINAL_STATUSES.has(task.status)) return presentTask(task);
-    const initialUpdatedAt = task.updatedAt;
-    const deadline = Date.now() + waitMs;
-    while (Date.now() < deadline) {
-      await delay(Math.min(100, Math.max(1, deadline - Date.now())));
-      task = await store.readTask(taskId);
-      if (task.updatedAt !== initialUpdatedAt || TERMINAL_STATUSES.has(task.status)) break;
-    }
-    return presentTask(task);
+    const waitMs = normalizeGetWait(input?.wait_ms);
+    return presentTask(await readWithWait(taskId, waitMs), { compactActive: true });
+  }
+  async function wait(input) {
+    const taskId = requireTaskId(input?.task_id);
+    const waitMs = normalizeLongWait(input?.wait_ms);
+    return presentTask(await readWithWait(taskId, waitMs, { terminalOnly: true }), { compactActive: true });
   }
   async function continueTask(input) {
     const taskId = requireTaskId(input?.task_id);
@@ -30486,6 +30519,7 @@ function createTaskService({
     store,
     start,
     get,
+    wait,
     continue: continueTask,
     cancel
   };
@@ -30662,7 +30696,7 @@ function createMcpServer({ service = createTaskService() } = {}) {
     const task = await service.start(args);
     return successResult(
       task,
-      `Kimi task ${task.taskId} started with status ${task.status} for: ${task.allowedPaths.join(", ")}. Codex must poll this task and avoid editing the same project meanwhile.`
+      `Kimi task ${task.taskId} started with status ${task.status} for: ${task.allowedPaths.join(", ")}. Codex must wait for this task and avoid editing the same project meanwhile.`
     );
   }));
   server.registerTool("get_kimi_task", {
@@ -30675,6 +30709,18 @@ function createMcpServer({ service = createTaskService() } = {}) {
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
   }, safe(async (args) => {
     const task = await service.get(args);
+    return successResult(task, statusText(task));
+  }));
+  server.registerTool("wait_kimi_task", {
+    title: "Wait efficiently for a Kimi task",
+    description: "Wait up to five minutes for a persistent Kimi task to finish, ignoring intermediate phase updates. A timed-out active task returns only compact status; a terminal task returns the full task, attempts, and Git change receipt for Codex review.",
+    inputSchema: {
+      task_id: taskIdSchema,
+      wait_ms: external_exports3.number().int().min(1e3).max(3e5).default(45e3)
+    },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
+  }, safe(async (args) => {
+    const task = await service.wait(args);
     return successResult(task, statusText(task));
   }));
   server.registerTool("continue_kimi_task", {

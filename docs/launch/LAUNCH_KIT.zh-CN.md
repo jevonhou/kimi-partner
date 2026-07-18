@@ -109,7 +109,7 @@ npm ci
 npm run verify
 ```
 
-接着按照仓库 README，把本地插件注册到个人 Codex marketplace，执行 `codex plugin add kimi-partner@personal`，然后新开一个 Codex 任务加载 Skill 和四个 MCP 工具。若个人 marketplace 使用了其他名称，请以本机配置为准。
+接着按照仓库 README，把本地插件注册到个人 Codex marketplace，执行 `codex plugin add kimi-partner@personal`，然后新开一个 Codex 任务加载 Skill 和五个 MCP 工具。若个人 marketplace 使用了其他名称，请以本机配置为准。
 
 第一次建议从小范围任务开始，例如：
 

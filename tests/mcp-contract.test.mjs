@@ -31,6 +31,9 @@ function fakeService() {
       if (taskId === "missing") throw new Error("task not found: missing");
       return { taskId, status: "completed", phase: "completed", summary: "done" };
     },
+    async wait({ task_id: taskId }) {
+      return { taskId, status: "running", phase: "running", detail: "active", suggestedPollMs: 20_000 };
+    },
     async continue() {
       return { taskId: "task-1", status: "continuing", phase: "continuing" };
     },
@@ -40,12 +43,13 @@ function fakeService() {
   };
 }
 
-test("MCP server exposes exactly four opt-in Kimi tools", async () => {
+test("MCP server exposes the long-wait tool alongside the four task controls", async () => {
   await withClient(fakeService(), async (client) => {
     const tools = await client.listTools();
     assert.deepEqual(tools.tools.map((tool) => tool.name), [
       "start_kimi_task",
       "get_kimi_task",
+      "wait_kimi_task",
       "continue_kimi_task",
       "cancel_kimi_task",
     ]);
@@ -55,6 +59,21 @@ test("MCP server exposes exactly four opt-in Kimi tools", async () => {
     assert.match(start.description, /Codex/i);
     assert.ok(start.inputSchema.properties.max_runtime_minutes);
     assert.ok(start.inputSchema.properties.allow_dependency_install);
+    const wait = tools.tools.find((tool) => tool.name === "wait_kimi_task");
+    assert.equal(wait.inputSchema.properties.wait_ms.default, 45_000);
+    assert.equal(wait.inputSchema.properties.wait_ms.maximum, 300_000);
+  });
+});
+
+test("wait_kimi_task returns compact active status", async () => {
+  await withClient(fakeService(), async (client) => {
+    const result = await client.callTool({
+      name: "wait_kimi_task",
+      arguments: { task_id: "task-1", wait_ms: 120_000 },
+    });
+    assert.equal(result.structuredContent.detail, "active");
+    assert.equal(result.structuredContent.suggestedPollMs, 20_000);
+    assert.doesNotMatch(result.content[0].text, /poll/i);
   });
 });
 

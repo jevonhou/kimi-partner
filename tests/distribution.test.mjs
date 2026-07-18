@@ -44,6 +44,7 @@ test("bundled MCP server runs from an isolated directory without node_modules", 
     assert.deepEqual(tools.tools.map((tool) => tool.name), [
       "start_kimi_task",
       "get_kimi_task",
+      "wait_kimi_task",
       "continue_kimi_task",
       "cancel_kimi_task",
     ]);

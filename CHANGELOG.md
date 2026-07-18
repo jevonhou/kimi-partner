@@ -2,6 +2,18 @@
 
 All notable changes to Kimi Partner are documented here.
 
+## [Unreleased]
+
+### Added
+
+- `wait_kimi_task` for efficient terminal waiting that ignores intermediate phase updates, with a 45-second default and a configurable maximum of 5 minutes.
+- Coverage for long-wait bounds, status-check counts, compact active responses, terminal receipts, and the bundled five-tool contract.
+
+### Changed
+
+- Active `get_kimi_task` and `wait_kimi_task` responses are now compact; terminal responses retain the full task, attempts, and Git change receipt.
+- The fallback polling suggestion increased from 1.5 seconds to 20 seconds.
+
 ## [0.1.1] - 2026-07-18
 
 ### Added

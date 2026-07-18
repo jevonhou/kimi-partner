@@ -45,7 +45,7 @@ Kimi is an implementation partner here—not an automatic router and not the fin
 ## What it does
 
 - **Opt-in delegation** — Kimi is used only when the user explicitly asks for it or approves it for the current task.
-- **Persistent async tasks** — start a task, poll its state, and recover results across Codex task restarts.
+- **Persistent async tasks** — start a task, long-wait efficiently, and recover results across Codex task restarts.
 - **Same-session review loop** — return Codex's evidence-backed feedback to the captured Kimi session.
 - **Model continuity** — pin the model alias for every attempt; K3 sessions keep preserved thinking history.
 - **Bounded execution** — allowed paths, dependency-install controls, external-path checks, blocked Node inline/stdin execution, dangerous Git-command checks, and a hard per-attempt timeout.
@@ -58,8 +58,15 @@ Kimi is an implementation partner here—not an automatic router and not the fin
 | --- | --- |
 | `start_kimi_task` | Start an explicitly approved, scoped Kimi coding task. |
 | `get_kimi_task` | Read progress or wait briefly for state changes. |
+| `wait_kimi_task` | Wait up to five minutes for a terminal result, ignoring intermediate phases. |
 | `continue_kimi_task` | Resume the same Kimi session with Codex review feedback. |
 | `cancel_kimi_task` | Stop a verified active worker when the user asks. |
+
+### Efficient waiting protocol
+
+Use `get_kimi_task` for a quick snapshot or a backward-compatible wait of up to 30 seconds. For normal active work, use `wait_kimi_task`: it ignores intermediate phase updates and returns only when the task finishes or the wait expires. It defaults to 45 seconds—leaving headroom for MCP transports with a 60-second request timeout—and clients that support longer tool calls may request up to 300 seconds.
+
+While a task is active, both read tools return only `taskId`, `status`, `phase`, `updatedAt`, terminal/detail flags, and a 20-second fallback polling suggestion. Once the task is terminal, the response expands to the complete task, attempts, summary/error, and Git change receipt. This keeps repeated status reads inexpensive without weakening final review evidence.
 
 ## Requirements
 
@@ -75,7 +82,7 @@ Kimi is an implementation partner here—not an automatic router and not the fin
 
 Paste this into Codex:
 
-> Install the Kimi Partner plugin from https://github.com/jevonhou/kimi-partner. Clone it to `~/plugins/kimi-partner`, run its verification, register it in my personal Codex marketplace, install it, and confirm that its Skill and four MCP tools load.
+> Install the Kimi Partner plugin from https://github.com/jevonhou/kimi-partner. Clone it to `~/plugins/kimi-partner`, run its verification, register it in my personal Codex marketplace, install it, and confirm that its Skill and five MCP tools load.
 
 This lets Codex inspect the repository shape, build the bundle, update the personal marketplace safely, and verify the installed copy.
 

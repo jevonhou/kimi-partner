@@ -88,7 +88,7 @@ export function createMcpServer({ service = createTaskService() } = {}) {
     const task = await service.start(args);
     return successResult(
       task,
-      `Kimi task ${task.taskId} started with status ${task.status} for: ${task.allowedPaths.join(", ")}. Codex must poll this task and avoid editing the same project meanwhile.`,
+      `Kimi task ${task.taskId} started with status ${task.status} for: ${task.allowedPaths.join(", ")}. Codex must wait for this task and avoid editing the same project meanwhile.`,
     );
   }));
 
@@ -102,6 +102,19 @@ export function createMcpServer({ service = createTaskService() } = {}) {
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   }, safe(async (args) => {
     const task = await service.get(args);
+    return successResult(task, statusText(task));
+  }));
+
+  server.registerTool("wait_kimi_task", {
+    title: "Wait efficiently for a Kimi task",
+    description: "Wait up to five minutes for a persistent Kimi task to finish, ignoring intermediate phase updates. A timed-out active task returns only compact status; a terminal task returns the full task, attempts, and Git change receipt for Codex review.",
+    inputSchema: {
+      task_id: taskIdSchema,
+      wait_ms: z.number().int().min(1_000).max(300_000).default(45_000),
+    },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  }, safe(async (args) => {
+    const task = await service.wait(args);
     return successResult(task, statusText(task));
   }));
 
