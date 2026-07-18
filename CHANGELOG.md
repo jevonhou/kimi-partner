@@ -4,6 +4,8 @@ All notable changes to Kimi Partner are documented here.
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-07-18
+
 ### Added
 
 - `wait_kimi_task` for efficient terminal waiting that ignores intermediate phase updates, with a 45-second default and a configurable maximum of 5 minutes.
@@ -34,4 +36,6 @@ All notable changes to Kimi Partner are documented here.
 - Bundled MCP server is syntax-checked and tested from an isolated directory.
 - Dependency audit reports zero known vulnerabilities.
 
+[Unreleased]: https://github.com/jevonhou/kimi-partner/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/jevonhou/kimi-partner/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/jevonhou/kimi-partner/compare/v0.1.0...v0.1.1

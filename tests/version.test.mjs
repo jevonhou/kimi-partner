@@ -8,9 +8,9 @@ test("public package, plugin, lockfile, and MCP versions stay aligned", async ()
   const plugin = JSON.parse(await readFile(".codex-plugin/plugin.json", "utf8"));
   const serverSource = await readFile("src/server.mjs", "utf8");
 
-  assert.equal(packageJson.version, "0.1.1");
+  assert.equal(packageJson.version, "0.1.2");
   assert.equal(packageLock.version, packageJson.version);
   assert.equal(packageLock.packages[""].version, packageJson.version);
   assert.equal(plugin.version, packageJson.version);
-  assert.match(serverSource, /McpServer\(\{ name: "Kimi Partner", version: "0\.1\.1" \}\)/);
+  assert.match(serverSource, /McpServer\(\{ name: "Kimi Partner", version: "0\.1\.2" \}\)/);
 });
