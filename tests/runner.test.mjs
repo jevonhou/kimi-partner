@@ -263,19 +263,85 @@ console.log(/https?:\/\//.test(html), emoji.test(html), ordinary.test(html));
   assert.equal(result.policyViolation, null);
 });
 
+test("runner allows regex literals in an inline node --eval option", async () => {
+  await chmod(fakeKimi, 0o755);
+  const projectPath = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-inline-eval-"));
+  const taskDirectory = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-inline-eval-state-"));
+  const event = {
+    role: "assistant",
+    tool_calls: [{
+      function: {
+        name: "Bash",
+        arguments: JSON.stringify({ command: "node --eval='console.log(/foo/.test(\"food\"))'" }),
+      },
+    }],
+  };
+
+  const result = await runKimiAttempt({
+    taskId: "task-shell-inline-eval",
+    attempt: 1,
+    executable: fakeKimi,
+    projectPath,
+    prompt: "validate project files",
+    modelAlias: "kimi-code/k3",
+    maxRuntimeMs: 2000,
+    policy: { gitRoot: projectPath, allowedPaths: ["src"] },
+    taskDirectory,
+    env: { ...process.env, FAKE_KIMI_TOOL_CALL: JSON.stringify(event) },
+  });
+
+  assert.equal(result.success, true);
+  assert.equal(result.policyViolation, null);
+});
+
+test("runner rejects shell expansion inside node eval arguments", async () => {
+  await chmod(fakeKimi, 0o755);
+  const projectPath = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-eval-expansion-"));
+  const commands = [
+    'node -e "$(cat /tmp/x)"',
+    'node -e "$(cat</tmp/x)"',
+    'node --eval "$(cat /tmp/x)"',
+    'node --eval="$(cat /tmp/x)"',
+    "node -e $(cat /tmp/x)",
+    'node -e "`cat /tmp/x`"',
+  ];
+
+  for (const [index, command] of commands.entries()) {
+    const taskDirectory = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-eval-expansion-state-"));
+    const event = {
+      role: "assistant",
+      tool_calls: [{ function: { name: "Bash", arguments: JSON.stringify({ command }) } }],
+    };
+    const result = await runKimiAttempt({
+      taskId: `task-shell-eval-expansion-${index}`,
+      attempt: 1,
+      executable: fakeKimi,
+      projectPath,
+      prompt: "validate project files",
+      modelAlias: "kimi-code/k3",
+      maxRuntimeMs: 2000,
+      policy: { gitRoot: projectPath, allowedPaths: ["src"] },
+      taskDirectory,
+      env: { ...process.env, FAKE_KIMI_TOOL_CALL: JSON.stringify(event) },
+    });
+
+    assert.equal(result.success, false, command);
+    assert.equal(result.policyViolation?.code, "NODE_EVAL_SHELL_EXPANSION_NOT_ALLOWED", command);
+  }
+});
+
 test("runner blocks external absolute paths inside node eval string literals", async () => {
   await chmod(fakeKimi, 0o755);
   const projectPath = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-js-string-policy-"));
-  const forbiddenTargets = [
-    "/tmp/x",
-    "/Users/x",
-    "/Applications/x",
-    "//server/share",
+  const forbiddenCases = [
+    { target: "/tmp/x", command: 'node -e \'require("fs").readFileSync("/tmp/x")\'' },
+    { target: "/Users/x", command: 'node -e \'require("fs").readFileSync("/Users/x")\'' },
+    { target: "/Applications/x", command: 'node -e \'require("fs").readFileSync("/Applications/x")\'' },
+    { target: "//server/share", command: 'node -e \'require("fs").readFileSync("//server/share")\'' },
   ];
 
-  for (const [index, target] of forbiddenTargets.entries()) {
+  for (const [index, { command, target }] of forbiddenCases.entries()) {
     const taskDirectory = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-js-string-policy-state-"));
-    const command = `node -e 'require("fs").readFileSync("${target}")'`;
     const event = {
       role: "assistant",
       tool_calls: [{ function: { name: "Bash", arguments: JSON.stringify({ command }) } }],
@@ -301,6 +367,70 @@ test("runner blocks external absolute paths inside node eval string literals", a
     assert.equal(result.policyViolation?.code, "SHELL_PATH_OUTSIDE_GIT_ROOT", command);
     assert.equal(result.policyViolation?.target, target, command);
   }
+});
+
+test("runner keeps scanning node eval after postfix operators and decodes braced Unicode escapes", async () => {
+  await chmod(fakeKimi, 0o755);
+  const projectPath = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-js-lexer-policy-"));
+  const commands = [
+    'node -e \'let x=1; x++ / 2; require("fs").readFileSync("/tmp/x")\'',
+    String.raw`node -e 'require("fs").readFileSync("\u{2f}tmp/x")'`,
+  ];
+  const violations = [];
+
+  for (const [index, command] of commands.entries()) {
+    const taskDirectory = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-js-lexer-policy-state-"));
+    const event = {
+      role: "assistant",
+      tool_calls: [{ function: { name: "Bash", arguments: JSON.stringify({ command }) } }],
+    };
+    const result = await runKimiAttempt({
+      taskId: `task-shell-js-lexer-policy-${index}`,
+      attempt: 1,
+      executable: fakeKimi,
+      projectPath,
+      prompt: "read project files",
+      modelAlias: "kimi-code/k3",
+      maxRuntimeMs: 2000,
+      policy: { gitRoot: projectPath, allowedPaths: ["src"] },
+      taskDirectory,
+      env: { ...process.env, FAKE_KIMI_TOOL_CALL: JSON.stringify(event) },
+    });
+    violations.push(result.policyViolation ?? null);
+  }
+
+  assert.deepEqual(
+    violations.map((violation) => violation?.code ?? null),
+    ["SHELL_PATH_OUTSIDE_GIT_ROOT", "SHELL_PATH_OUTSIDE_GIT_ROOT"],
+  );
+  assert.deepEqual(violations.map((violation) => violation?.target ?? null), ["/tmp/x", "/tmp/x"]);
+});
+
+test("runner rejects template interpolation inside node eval arguments", async () => {
+  await chmod(fakeKimi, 0o755);
+  const projectPath = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-template-eval-"));
+  const taskDirectory = await mkdtemp(path.join(tmpdir(), "kimi-partner-shell-template-eval-state-"));
+  const command = "node -e 'require(\"fs\").readFileSync(`${\"/\"}tmp/x`)'";
+  const event = {
+    role: "assistant",
+    tool_calls: [{ function: { name: "Bash", arguments: JSON.stringify({ command }) } }],
+  };
+
+  const result = await runKimiAttempt({
+    taskId: "task-shell-template-eval",
+    attempt: 1,
+    executable: fakeKimi,
+    projectPath,
+    prompt: "validate project files",
+    modelAlias: "kimi-code/k3",
+    maxRuntimeMs: 2000,
+    policy: { gitRoot: projectPath, allowedPaths: ["src"] },
+    taskDirectory,
+    env: { ...process.env, FAKE_KIMI_TOOL_CALL: JSON.stringify(event) },
+  });
+
+  assert.equal(result.success, false);
+  assert.equal(result.policyViolation?.code, "NODE_EVAL_TEMPLATE_INTERPOLATION_NOT_ALLOWED");
 });
 
 test("runner blocks dependency installation even when the command has leading whitespace", async () => {
