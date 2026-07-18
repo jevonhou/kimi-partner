@@ -27,3 +27,12 @@ test("launch source keeps the designer-led positioning exact", async () => {
     assert.doesNotMatch(source, /一键美化|替代设计师|降本|裁员/);
   }
 });
+
+test("launch kit contains every promised channel and safety boundary", async () => {
+  const copy = await readFile("docs/launch/LAUNCH_KIT.zh-CN.md", "utf8");
+  for (const heading of ["X", "即刻", "小红书", "V2EX / 掘金", "30 秒演示脚本", "README 演示区", "发布顺序", "常见问题"]) {
+    assert.match(copy, new RegExp(heading.replace(" / ", ".*")));
+  }
+  assert.match(copy, /设计师定方向，模型加速落地/);
+  assert.doesNotMatch(copy, /设计师没用了|一键替代设计师|裁员神器/);
+});
