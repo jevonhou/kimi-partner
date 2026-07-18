@@ -1,0 +1,39 @@
+{
+  "name": "kimi-partner",
+  "version": "0.1.0",
+  "description": "Delegate coding tasks to Kimi while Codex keeps scope, safety, and final verification.",
+  "private": true,
+  "license": "MIT",
+  "author": "JeongHau",
+  "homepage": "https://github.com/jevonhou/kimi-partner#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jevonhou/kimi-partner.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jevonhou/kimi-partner/issues"
+  },
+  "keywords": [
+    "codex",
+    "kimi",
+    "kimi-code",
+    "mcp",
+    "ai-agents",
+    "developer-tools"
+  ],
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "verify": "npm run build && npm test && node --check dist/mcp-server.mjs",
+    "start:mcp": "npm run build && node dist/mcp-server.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "esbuild": "0.25.12",
+    "zod": "4.1.13"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "kimi-partner",
+  "version": "0.1.0",
+  "description": "Delegate explicitly approved frontend implementation tasks from Codex to local Kimi Code, then return them to Codex for verification.",
+  "author": {
+    "name": "JeongHau",
+    "url": "https://github.com/jevonhou"
+  },
+  "homepage": "https://github.com/jevonhou/kimi-partner#readme",
+  "repository": "https://github.com/jevonhou/kimi-partner",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "kimi",
+    "kimi-code",
+    "mcp",
+    "ai-agents"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Kimi Partner",
+    "shortDescription": "Let Codex hand an approved frontend task to Kimi and verify the result.",
+    "longDescription": "Kimi Partner gives Codex an opt-in local delegation loop: start a Kimi Code task in a Git project, monitor it asynchronously, return review feedback to the same session, and keep final testing and browser acceptance with Codex.",
+    "developerName": "JeongHau",
+    "category": "Productivity",
+    "brandColor": "#2563EB",
+    "composerIcon": "./assets/logo/kimi-partner-logo-256.png",
+    "logo": "./assets/logo/kimi-partner-logo.png",
+    "capabilities": [
+      "Opt-in Kimi delegation",
+      "Persistent local task state",
+      "Git-aware change receipts",
+      "Codex-owned verification"
+    ],
+    "defaultPrompt": [
+      "Let Kimi implement this frontend task, then verify it yourself.",
+      "Ask Kimi for an alternative frontend version and compare the result."
+    ]
+  },
+  "mcpServers": "./.mcp.json"
+}
