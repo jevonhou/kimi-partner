@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kimi Partner — Designer-led workflow</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 1080px; height: 1350px; margin: 0; overflow: hidden; }
+    body { color: #171A22; font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+    .canvas {
+      width: 1080px;
+      height: 1350px;
+      padding: 66px 72px 72px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: #F5F7FC;
+    }
+    .canvas::before {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 19%;
+      height: 100%;
+      content: "";
+      background: #FFFFFF;
+    }
+    .brand, .message, .roles, footer { position: relative; z-index: 1; }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      color: #171A22;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+    }
+    .brand img { width: 34px; height: 34px; object-fit: contain; }
+    .message { margin-top: 158px; }
+    .eyebrow {
+      margin: 0 0 25px;
+      color: #2563EB;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+    }
+    h1 {
+      margin: 0;
+      color: #171A22;
+      font-size: 76px;
+      font-weight: 800;
+      letter-spacing: -0.065em;
+      line-height: 1.1;
+    }
+    h1 em { color: #7C4DFF; font-style: normal; }
+    .support {
+      max-width: 650px;
+      margin: 29px 0 0;
+      color: #5E6678;
+      font-size: 21px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      line-height: 1.7;
+    }
+    .roles {
+      margin-top: auto;
+      display: grid;
+      gap: 20px;
+    }
+    .roles article {
+      min-height: 120px;
+      padding: 25px 28px;
+      display: grid;
+      align-content: center;
+      gap: 8px;
+      background: #FFFFFF;
+      border-left: 4px solid #2563EB;
+    }
+    .roles article:nth-child(2) { border-color: #7C4DFF; }
+    .roles article:nth-child(3) { border-color: #171A22; }
+    .roles b { color: #171A22; font-size: 25px; line-height: 1.2; }
+    .roles span { color: #5E6678; font-size: 16px; line-height: 1.4; }
+    footer {
+      margin-top: 32px;
+      color: #5E6678;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+  <main class="canvas">
+    <header class="brand"><img src="../../logo/kimi-partner-logo.png" alt=""><span>KIMI PARTNER</span></header>
+    <section class="message">
+      <p class="eyebrow">DESIGNER-LED WORKFLOW</p>
+      <h1>设计师定方向<br><em>模型加速落地</em></h1>
+      <p class="support">让 Kimi 发挥前端表现力，让 Codex 守住工程质量。</p>
+    </section>
+    <section class="roles">
+      <article><b>设计师</b><span>目标 · 规范 · 判断</span></article>
+      <article><b>Kimi</b><span>前端实现 · 视觉完成度</span></article>
+      <article><b>Codex</b><span>范围控制 · 审查验收</span></article>
+    </section>
+    <footer>github.com/jevonhou/kimi-partner</footer>
+  </main>
+</body>
+</html>

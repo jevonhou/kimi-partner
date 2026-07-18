@@ -27,6 +27,7 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
+    "render:launch": "node scripts/render-launch-assets.mjs",
     "test": "node --test tests/*.test.mjs",
     "verify": "npm run build && npm test && node --check dist/mcp-server.mjs",
     "start:mcp": "npm run build && node dist/mcp-server.mjs"
